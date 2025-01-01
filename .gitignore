@@ -1,0 +1,11 @@
+.terraform/
+terraform.tfvars
+*terraform.tfstate*
+tfplan
+*.log
+*.raw
+*.qcow2
+*.gz
+*.tfvars
+tmp
+.terraform.lock.hcl
