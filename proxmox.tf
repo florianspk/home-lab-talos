@@ -15,7 +15,7 @@ resource "proxmox_virtual_environment_file" "talos" {
 resource "proxmox_virtual_environment_vm" "controller" {
   count           = var.controller_count
   name            = "${var.prefix}-${local.controller_nodes[count.index].name}"
-  node_name       = var.proxmox_pve_node_name[count.index % 2]
+  node_name       = var.proxmox_pve_node_name[1]
   tags            = sort(["talos", "controller", "terraform"])
   stop_on_destroy = true
   bios            = "ovmf"
@@ -39,16 +39,16 @@ resource "proxmox_virtual_environment_vm" "controller" {
     mtu = 1
   }
   tpm_state {
-    datastore_id = "${var.proxmox_pve_node_name[count.index % 2]}-local-lvm"
+    datastore_id = "${var.proxmox_pve_node_name[1]}-local-lvm"
     version = "v2.0"
   }
   efi_disk {
-    datastore_id = "${var.proxmox_pve_node_name[count.index % 2]}-local-lvm"
+    datastore_id = "${var.proxmox_pve_node_name[1]}-local-lvm"
     file_format  = "raw"
     type         = "4m"
   }
   disk {
-    datastore_id = "${var.proxmox_pve_node_name[count.index % 2]}-local-lvm"
+    datastore_id = "${var.proxmox_pve_node_name[1]}-local-lvm"
     interface    = "scsi0"
     iothread     = true
     ssd          = true
@@ -62,7 +62,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
     trim    = true
   }
   initialization {
-    datastore_id = "${var.proxmox_pve_node_name[count.index % 2]}-local-lvm"
+    datastore_id = "${var.proxmox_pve_node_name[1]}-local-lvm"
     ip_config {
       ipv4 {
         address = "${local.controller_nodes[count.index].address}/24"
