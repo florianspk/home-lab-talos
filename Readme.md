@@ -148,7 +148,7 @@ terraform output -raw kubeconfig > ~/.kube/config-talos
 1. Install the operator:
 
 ```bash
-kubectl apply --server-side -k "https://github.com/piraeusdatastore/piraeus-operator//config/default?ref=v<piraeus_operator_version>"
+kubectl apply --server-side -k "https://github.com/piraeusdatastore/piraeus-operator//config/default?ref=v2.7.1"
 ```
 
 2. Wait for the operator to be ready:
