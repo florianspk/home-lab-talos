@@ -129,4 +129,36 @@ data "helm_template" "cilium" {
     name  = "hubble.ui.enabled"
     value = "true"
   }
+  set {
+    name  = "prometheus.enabled"
+    value = "true"
+  }
+  set {
+    name  = "operator.prometheus.enabled"
+    value = "true"
+  }
+  set {
+    name  = "hubble.enabled"
+    value = "true"
+  }
+  set {
+    name  = "hubble.metrics.enableOpenMetrics"
+    value = "true"
+  }
+  set {
+    name  = "hubble.metrics.enabled"
+    value = "{httpV2:sourceContext=workload-name|pod-name|reserved-identity;destinationContext=workload-name|pod-name|reserved-identity;labelsContext=source_namespace,destination_namespace,traffic_direction,kafka:sourceContext=workload-name|pod-name|reserved-identity;destinationContext=workload-name|pod-name|reserved-identity;labelsContext=source_namespace,destination_namespace,traffic_direction}"
+  }
+  set {
+    name  = "hubble.dashboards.enabled"
+    value = "true"
+  }
+  set {
+    name  = "hubble.dashboards.namespace"
+    value = "monitoring"
+  }
+  set {
+    name  = "hubble.serviceMonitor.enabled"
+    value = "true"
+  }
 }
