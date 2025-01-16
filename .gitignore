@@ -1,6 +1,6 @@
 .terraform/
 terraform.tfvars
-*terraform.tfstate*
+*.tfstate*
 tfplan
 *.log
 *.raw
@@ -9,3 +9,4 @@ tfplan
 *.tfvars
 tmp
 .terraform.lock.hcl
+.env

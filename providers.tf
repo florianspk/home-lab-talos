@@ -31,17 +31,17 @@ terraform {
 
 provider "proxmox" {
   tmp_dir = "tmp"
-  endpoint = "https://${var.proxmox_pve_node_name[0]}.wallaby-marlin.ts.net:8006"
+  endpoint = "https://${var.proxmox_pve_node_name[0]}.${var.pve_domain}:8006"
   api_token = "${var.api_token}"
   ssh {
     agent= true
     username = "terraform"
-    private_key = "${var.path_private_key}"
+    private_key = file("${var.path_private_key}")
     dynamic "node" {
       for_each = var.proxmox_pve_node_name
       content {
         name    = node.value
-        address = "${node.value}.${var.ingress_domain}"
+        address = "${node.value}.${var.pve_domain}"
       }
     }
   }

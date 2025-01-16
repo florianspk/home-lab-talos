@@ -82,6 +82,11 @@ variable "ingress_domain" {
   default     = "example.test"
 }
 
+variable "pve_domain" {
+  description = "The DNS domaine of the pve"
+  type = string
+}
+
 variable "controller_count" {
   type    = number
   default = 1
