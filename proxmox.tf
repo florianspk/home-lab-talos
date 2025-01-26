@@ -16,7 +16,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
   count           = var.controller_count
   name            = "${var.prefix}-${local.controller_nodes[count.index].name}"
   node_name       = var.proxmox_pve_node_name[1]
-  tags            = sort(["talos", "controller", "terraform"])
+  tags            = sort(concat(var.tags, ["controller"]))
   stop_on_destroy = true
   bios            = "ovmf"
   machine         = "q35"
@@ -76,7 +76,7 @@ resource "proxmox_virtual_environment_vm" "worker" {
   count           = var.worker_count
   name            = "${var.prefix}-${local.worker_nodes[count.index].name}"
   node_name       = var.proxmox_pve_node_name[count.index % 2]
-  tags            = sort(["talos", "worker", "terraform"])
+  tags            = sort(concat(var.tags , ["worker"]))
   stop_on_destroy = true
   bios            = "ovmf"
   machine         = "q35"

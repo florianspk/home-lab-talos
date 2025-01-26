@@ -130,3 +130,9 @@ variable "path_private_key" {
   description = "path to the private key"
   default = "~/.ssh/terraform_id_ed25519"
 }
+
+variable "tags" {
+  type = list(string)
+  default = ["talos", "terraform"]
+  description = "values to tag the vm"
+}

@@ -49,3 +49,4 @@ provider "proxmox" {
 
 provider "talos" {
 }
+
