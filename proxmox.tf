@@ -10,6 +10,11 @@ resource "proxmox_virtual_environment_file" "talos" {
     path      = "tmp/talos/talos-${var.talos_version}.qcow2"
     file_name = "talos-${var.talos_version}.img"
   }
+  # Use the lifecycle block to prevent the iso from being deleted
+  # See https://www.terraform.io/docs/language/meta-arguments/lifecycle
+  # lifecycle {
+  #   ignore_changes = all
+  # }
 }
 
 resource "proxmox_virtual_environment_vm" "controller" {
