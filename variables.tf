@@ -136,3 +136,10 @@ variable "tags" {
   default = ["talos", "terraform"]
   description = "values to tag the vm"
 }
+
+variable "argocd_enabled" {
+  type = bool
+  default = true
+  description = "enable argocd"
+  
+}

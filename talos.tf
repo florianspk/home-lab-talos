@@ -107,7 +107,7 @@ data "talos_machine_configuration" "controller" {
     }),
     yamlencode({
       cluster = {
-        inlineManifests = [
+        inlineManifests = concat([
           {
             name     = "spin"
             contents = <<-EOF
@@ -146,7 +146,8 @@ data "talos_machine_configuration" "controller" {
           {
             name     = "reloader"
             contents = data.helm_template.reloader.manifest
-          },
+          }
+        ], var.argocd_enabled ? [
           {
             name = "argocd"
             contents = join("---\n", [
@@ -160,11 +161,12 @@ data "talos_machine_configuration" "controller" {
               data.helm_template.argocd.manifest,
               "# Source argocd.tf\n${local.argocd_manifest}",
             ])
-          },
-        ],
-      },
+          }
+        ] : [])
+      }
     }),
   ]
+
 }
 
 // see https://registry.terraform.io/providers/siderolabs/talos/0.6.1/docs/data-sources/machine_configuration
