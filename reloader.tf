@@ -16,7 +16,7 @@ data "helm_template" "reloader" {
   repository = "https://stakater.github.io/stakater-charts"
   chart      = "reloader"
   # renovate: datasource=helm depName=reloader registryUrl=https://stakater.github.io/stakater-charts
-  version      = "1.2.1"
+  version      = "1.3.0"
   kube_version = var.kubernetes_version
   api_versions = []
   set {
