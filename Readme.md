@@ -56,8 +56,8 @@ export K8S_NAMESPACE='<namespace>'
 | `controller_count`                                     | `number`      | `1`                               | Number of control plane nodes. Must be at least 1.                                          |
 | `worker_count`                                         | `number`      | `2`                               | Number of worker nodes. Must be at least 1.                                                |
 | `prefix`                                               | `string`      | `vm-talos`                        | Prefix for VM names.                                                                       |
-| `talos-iso-datastoreid`                                | `string`      | `isoShare`                        | Datastore ID for Talos ISO images.                                                         |
-| `talos-datastoreid-suffix`                            | `string`      | `local-lvm`                       | Datastore suffix for Talos VMs.                                                            |
+| `talos-iso-datastoreid`                                | `string`      | `local-lvm`                        | Datastore ID for Talos ISO images.                                                         |
+| `talos-datastoreid`                            | `string`      | `local-lvm-1`                       | Datastore suffix for Talos VMs.                                                            |
 | `api_token`                                            | `string`      | `XXXXXXXXXXX`                     | Secret token for authenticating with Proxmox.                                              |
 
 ---

@@ -30,12 +30,12 @@ terraform {
 }
 
 provider "proxmox" {
-  tmp_dir = "tmp"
-  endpoint = "https://${var.proxmox_pve_node_name[0]}.${var.pve_domain}:8006"
-  api_token = "${var.api_token}"
+  tmp_dir   = "tmp"
+  endpoint  = "https://${var.proxmox_pve_node_name[0]}.${var.pve_domain}:8006"
+  api_token = var.api_token
   ssh {
-    agent= true
-    username = "terraform"
+    agent       = true
+    username    = "root"
     private_key = file("${var.path_private_key}")
     dynamic "node" {
       for_each = var.proxmox_pve_node_name
@@ -49,4 +49,3 @@ provider "proxmox" {
 
 provider "talos" {
 }
-

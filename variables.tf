@@ -4,7 +4,7 @@ variable "proxmox_pve_node_name" {
 }
 
 variable "talos_version" {
-  type = string
+  type    = string
   default = "1.8.3"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.talos_version))
@@ -84,7 +84,7 @@ variable "ingress_domain" {
 
 variable "pve_domain" {
   description = "The DNS domaine of the pve"
-  type = string
+  type        = string
 }
 
 variable "controller_count" {
@@ -111,35 +111,40 @@ variable "prefix" {
 }
 
 variable "talos-iso-datastoreid" {
-  type = string
-  default = "isoShare"
+  type    = string
+  default = "local"
 }
-variable "talos-datastoreid-suffix" {
-  type = string
-  default = "local-lvm"
+variable "talos-datastoreid" {
+  type    = string
+  default = "local-lvm-1"
+}
+
+variable "talos-iso-datastoreid-cp" {
+  type    = string
+  default = "pve-data"
 }
 
 variable "api_token" {
-  type = string
+  type        = string
   description = "secret to auth proxmox"
-  default = "XXXXXXXXXXX"
+  default     = "XXXXXXXXXXX"
 }
 
 variable "path_private_key" {
-  type = string
+  type        = string
   description = "path to the private key"
-  default = "~/.ssh/terraform_id_ed25519"
+  default     = "~/.ssh/terraform_id_ed25519"
 }
 
 variable "tags" {
-  type = list(string)
-  default = ["talos", "terraform"]
+  type        = list(string)
+  default     = ["talos", "terraform"]
   description = "values to tag the vm"
 }
 
 variable "argocd_enabled" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
   description = "enable argocd"
-  
+
 }
