@@ -62,19 +62,6 @@ export K8S_NAMESPACE='<namespace>'
 
 ---
 
-## Steps to Update Talos Extensions
-
-### 1. Fetch Extension Tags
-Use the [Talos Extensions documentation](https://github.com/siderolabs/extensions?tab=readme-ov-file#installing-extensions) to fetch and set the appropriate tags for:
-
-- QEMU Guest Agent
-- DRBD
-- Spin
-
-### 2. Update Extensions
-Use `crane` (or an equivalent tool) to retrieve image tags and update your Talos extensions configuration. Follow the instructions in the Extensions README to install or update extensions.
-
----
 
 ## Build Talos Images
 
@@ -83,6 +70,19 @@ Use `crane` (or an equivalent tool) to retrieve image tags and update your Talos
 - [Talos Advanced Metal Network Configuration](https://www.talos.dev/v1.8/advanced/metal-network-configuration/)
 
 ### Steps:
+
+### TL;DR
+
+You can simply run the automated script to build Talos images:
+
+```bash
+./hack/build_talos_image.sh
+```
+
+This script handles all the image building steps automatically including configuration, Docker image creation, and conversion to the required format.
+
+### Detailed Steps
+
 
 1. Prepare a configuration file `talos-<version>.yml` based on your requirements.
 2. Use the Talos Imager Docker image to build the Talos disk image:
