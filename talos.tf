@@ -147,7 +147,7 @@ data "talos_machine_configuration" "controller" {
             name     = "reloader"
             contents = data.helm_template.reloader.manifest
           }
-        ], var.argocd_enabled ? [
+          ], var.argocd_enabled ? [
           {
             name = "argocd"
             contents = join("---\n", [
@@ -212,7 +212,11 @@ resource "talos_machine_configuration_apply" "controller" {
     yamlencode({
       machine = {
         network = {
-          hostname = local.controller_nodes[count.index].name
+          hostname    = local.controller_nodes[count.index].name
+          nameservers = var.dns_serveurs
+        }
+        time = {
+          servers = var.ntp_serveurs
         }
       }
     }),
@@ -233,7 +237,11 @@ resource "talos_machine_configuration_apply" "worker" {
     yamlencode({
       machine = {
         network = {
-          hostname = local.worker_nodes[count.index].name
+          hostname    = local.worker_nodes[count.index].name
+          nameservers = var.dns_serveurs
+        }
+        time = {
+          servers = var.ntp_serveurs
         }
       }
     }),
@@ -252,6 +260,3 @@ resource "talos_machine_bootstrap" "talos" {
     talos_machine_configuration_apply.controller,
   ]
 }
-
-
-
