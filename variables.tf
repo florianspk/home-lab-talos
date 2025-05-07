@@ -148,3 +148,13 @@ variable "argocd_enabled" {
   description = "enable argocd"
 
 }
+
+variable "ntp_serveurs" {
+  type    = list(string)
+  default = ["pool.ntp.org"]
+}
+
+variable "dns_serveurs" {
+  type    = list(string)
+  default = ["1.1.1.1", "8.8.8.8"]
+}
