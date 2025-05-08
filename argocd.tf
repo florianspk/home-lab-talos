@@ -19,7 +19,7 @@ locals {
       spec = {
         subject = {
           organizations = [
-            var.ingress_domain, 
+            var.ingress_domain,
           ]
           organizationalUnits = [
             "Kubernetes",
@@ -64,7 +64,7 @@ data "helm_template" "argocd" {
   chart      = "argo-cd"
   # see https://artifacthub.io/packages/helm/argo/argo-cd
   # renovate: datasource=helm depName=argo-cd registryUrl=https://argoproj.github.io/argo-helm
-  version      = "8.0.0" # app version 2.13.1.
+  version      = "8.0.0" # app version 3.0.0.
   kube_version = var.kubernetes_version
   api_versions = []
   values = [yamlencode({
