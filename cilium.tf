@@ -147,7 +147,7 @@ data "helm_template" "cilium" {
   }
   set {
     name  = "hubble.metrics.enabled"
-    value = "{httpV2:sourceContext=workload-name|pod-name|reserved-identity;destinationContext=workload-name|pod-name|reserved-identity;labelsContext=source_namespace,destination_namespace,traffic_direction,kafka:sourceContext=workload-name|pod-name|reserved-identity;destinationContext=workload-name|pod-name|reserved-identity;labelsContext=source_namespace,destination_namespace,traffic_direction}"
+    value = "{dns,drop,tcp,flow,port-distribution,icmp,httpV2:exemplars=true;labelsContext=source_ip\\,source_namespace\\,source_workload\\,destination_ip\\,destination_namespace\\,destination_workload\\,traffic_direction}"
   }
   set {
     name  = "hubble.dashboards.enabled"
@@ -155,7 +155,7 @@ data "helm_template" "cilium" {
   }
   set {
     name  = "hubble.dashboards.namespace"
-    value = "monitoring"
+    value = "observability"
   }
   set {
     name  = "hubble.serviceMonitor.enabled"
