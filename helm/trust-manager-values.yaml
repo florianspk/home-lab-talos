@@ -1,0 +1,3 @@
+secretTargets:
+  enabled: true
+  authorizedSecretsAll: true

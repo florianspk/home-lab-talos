@@ -67,27 +67,5 @@ data "helm_template" "argocd" {
   version      = "8.0.0" # app version 3.0.0.
   kube_version = var.kubernetes_version
   api_versions = []
-  values = [yamlencode({
-    global = {
-      domain = local.argocd_domain
-    }
-    configs = {
-      params = {
-        # disable tls between the argocd components.
-        "server.insecure"                                = "true"
-        "server.repo.server.plaintext"                   = "true"
-        "server.dex.server.plaintext"                    = "true"
-        "controller.repo.server.plaintext"               = "true"
-        "applicationsetcontroller.repo.server.plaintext" = "true"
-        "reposerver.disable.tls"                         = "true"
-        "dexserver.disable.tls"                          = "true"
-      }
-    }
-    server = {
-      ingress = {
-        enabled = true
-        tls     = true
-      }
-    }
-  })]
+  values       = [file("${path.module}/helm/argocd-values.yaml")]
 }

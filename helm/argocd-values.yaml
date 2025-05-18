@@ -1,0 +1,15 @@
+global:
+  domain: local.argocd_domain
+configs:
+  params:
+    server.insecure: true
+    server.repo.server.plaintext: true
+    server.dex.server.plaintext: true
+    controller.repo.server.plaintext: true
+    applicationsetcontroller.repo.server.plaintext: true
+    reposerver.disable.tls: true
+    dexserver.disable.tls: true
+server:
+  ingress:
+    enabled: true
+    tls: true

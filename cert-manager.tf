@@ -76,10 +76,5 @@ data "helm_template" "cert_manager" {
   version      = "1.17.2"
   kube_version = var.kubernetes_version
   api_versions = []
-  # NB installCRDs is generally not recommended, BUT since this
-  #    is a development cluster we YOLO it.
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
+  values       = [file("${path.module}/helm/cert-manager-values.yaml")]
 }
