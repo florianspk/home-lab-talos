@@ -3,7 +3,7 @@ locals {
   # see https://docs.cilium.io/en/stable/network/l2-announcements/
   # see the CiliumL2AnnouncementPolicy type at https://github.com/cilium/cilium/blob/v1.16.4/pkg/k8s/apis/cilium.io/v2alpha1/l2announcement_types.go#L23-L42
   # see the CiliumLoadBalancerIPPool type at https://github.com/cilium/cilium/blob/v1.16.4/pkg/k8s/apis/cilium.io/v2alpha1/lbipam_types.go#L23-L47
-  cilium_external_lb_manifests = [
+  cilium_manifest_objects = [
     {
       apiVersion = "cilium.io/v2alpha1"
       kind       = "CiliumL2AnnouncementPolicy"
@@ -40,8 +40,84 @@ locals {
         ]
       }
     },
+    {
+      apiVersion = "gateway.networking.k8s.io/v1"
+      kind       = "GatewayClass"
+      metadata = {
+        name      = "cilium"
+        namespace = "kube-system"
+      }
+      spec = {
+        controllerName = "io.cilium/gateway-controller"
+      }
+    },
+    {
+      apiVersion = "gateway.networking.k8s.io/v1"
+      kind       = "Gateway"
+      metadata = {
+        name      = "internal-gw"
+        namespace = "kube-system"
+      }
+      spec = {
+        gatewayClassName = "cilium-internal"
+        listeners = [
+          {
+            name     = "http"
+            port     = 80
+            protocol = "HTTP"
+            allowedRoutes = {
+              namespaces = {
+                from = "All"
+              }
+            }
+          },
+          {
+            name     = "https"
+            port     = 443
+            protocol = "HTTPS"
+            allowedRoutes = {
+              namespaces = {
+                from = "All"
+              }
+            }
+            tls = {
+              mode = "Terminate"
+              certificateRefs = [
+                {
+                  kind = "Secret"
+                  name = "cilium-ingress-cert"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      apiVersion = "gateway.networking.k8s.io/v1"
+      kind       = "Gateway"
+      metadata = {
+        name      = "public-gw"
+        namespace = "kube-system"
+      }
+      spec = {
+        gatewayClassName = "cilium-public"
+        listeners = [
+          {
+            name     = "http"
+            port     = 80
+            protocol = "HTTP"
+            allowedRoutes = {
+              namespaces = {
+                from = "All"
+              }
+            }
+          },
+        ]
+      }
+    }
   ]
-  cilium_external_lb_manifest = join("---\n", [for d in local.cilium_external_lb_manifests : yamlencode(d)])
+  cilium_external_lb_manifest = join("---\n", [for d in local.cilium_manifest_objects : yamlencode(d)])
 }
 
 // see https://www.talos.dev/v1.8/kubernetes-guides/network/deploying-cilium/#method-4-helm-manifests-inline-install
@@ -61,104 +137,5 @@ data "helm_template" "cilium" {
   version      = "1.17.3"
   kube_version = var.kubernetes_version
   api_versions = []
-  set {
-    name  = "ipam.mode"
-    value = "kubernetes"
-  }
-  set {
-    name  = "securityContext.capabilities.ciliumAgent"
-    value = "{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}"
-  }
-  set {
-    name  = "securityContext.capabilities.cleanCiliumState"
-    value = "{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}"
-  }
-  set {
-    name  = "cgroup.autoMount.enabled"
-    value = "false"
-  }
-  set {
-    name  = "cgroup.hostRoot"
-    value = "/sys/fs/cgroup"
-  }
-  set {
-    name  = "k8sServiceHost"
-    value = "localhost"
-  }
-  set {
-    name  = "k8sServicePort"
-    value = local.common_machine_config.machine.features.kubePrism.port
-  }
-  set {
-    name  = "kubeProxyReplacement"
-    value = "true"
-  }
-  set {
-    name  = "l2announcements.enabled"
-    value = "true"
-  }
-  set {
-    name  = "devices"
-    value = "{eth0}"
-  }
-  set {
-    name  = "ingressController.enabled"
-    value = "true"
-  }
-  set {
-    name  = "ingressController.default"
-    value = "true"
-  }
-  set {
-    name  = "ingressController.loadbalancerMode"
-    value = "shared"
-  }
-  set {
-    name  = "ingressController.enforceHttps"
-    value = "false"
-  }
-  set {
-    name  = "envoy.enabled"
-    value = "true"
-  }
-  set {
-    name  = "hubble.relay.enabled"
-    value = "true"
-  }
-  set {
-    name  = "hubble.ui.enabled"
-    value = "true"
-  }
-  set {
-    name  = "prometheus.enabled"
-    value = "true"
-  }
-  set {
-    name  = "operator.prometheus.enabled"
-    value = "true"
-  }
-  set {
-    name  = "hubble.enabled"
-    value = "true"
-  }
-  set {
-    name  = "hubble.metrics.enableOpenMetrics"
-    value = "true"
-  }
-  set {
-    name  = "hubble.metrics.enabled"
-    value = "{dns,drop,tcp,flow,port-distribution,icmp,httpV2:exemplars=true;labelsContext=source_ip\\,source_namespace\\,source_workload\\,destination_ip\\,destination_namespace\\,destination_workload\\,traffic_direction}"
-  }
-  set {
-    name  = "hubble.dashboards.enabled"
-    value = "true"
-  }
-  set {
-    name  = "hubble.dashboards.namespace"
-    value = "observability"
-  }
-  set {
-    name  = "hubble.serviceMonitor.enabled"
-    value = "true"
-  }
+  values       = [file("${path.module}/helm/cilium-values.yaml")]
 }
