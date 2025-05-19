@@ -4,14 +4,33 @@ set -euo pipefail
 # Version Talos
 # renovate: datasource=github-releases depName=siderolabs/talos
 talos_version="1.10.2"
-
-# Extensions
-# renovate: datasource=docker depName=ghcr.io/siderolabs/qemu-guest-agent
-talos_qemu_guest_agent_extension_tag="10.0.0"
-# renovate: datasource=docker depName=ghcr.io/siderolabs/drbd
-talos_drbd_extension_tag="9.2.13-v1.10.0"
-# renovate: datasource=docker depName=ghcr.io/siderolabs/spin
+talos_qemu_guest_agent_extension_tag="9.2.3"
+talos_drbd_extension_tag="9.2.13-v1.10.2"
 talos_spin_extension_tag="v0.19.0"
+
+function update-talos-extension {
+  # see https://github.com/siderolabs/extensions?tab=readme-ov-file#installing-extensions
+  local variable_name="$1"
+  local image_name="$2"
+  local images="$3"
+  local image="$(grep -F "$image_name:" <<<"$images")"
+  local tag="${image#*:}"
+  echo "updating the talos extension to $image..."
+  variable_name="$variable_name" tag="$tag" perl -i -pe '
+    BEGIN {
+      $var = $ENV{variable_name};
+      $val = $ENV{tag};
+    }
+    s/^(\Q$var\E=).*/$1"$val"/;
+  ' do
+}
+
+function update-talos-extensions {
+  local images="$(crane export "ghcr.io/siderolabs/extensions:v$talos_version" | tar x -O image-digests)"
+  update-talos-extension talos_qemu_guest_agent_extension_tag ghcr.io/siderolabs/qemu-guest-agent "$images"
+  update-talos-extension talos_drbd_extension_tag ghcr.io/siderolabs/drbd "$images"
+  update-talos-extension talos_spin_extension_tag ghcr.io/siderolabs/spin "$images"
+}
 
 # Fonction de construction de l'image Talos
 function build_talos_image {
@@ -56,5 +75,7 @@ EOF
   qemu-img info $img_path
 }
 
+
 # Appel de la fonction pour construire l'image Talos
+update-talos-extensions
 build_talos_image
