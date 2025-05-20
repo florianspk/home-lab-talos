@@ -1,5 +1,5 @@
 global:
-  domain: local.argocd_domain
+  domain: "argocd.wheezy.lab"
 configs:
   params:
     server.insecure: true
