@@ -15,6 +15,7 @@ securityContext:
       - FOWNER
       - SETGID
       - SETUID
+      - NET_BIND_SERVICE
     cleanCiliumState:
       - NET_ADMIN
       - SYS_ADMIN
@@ -58,11 +59,6 @@ gatewayAPI:
 
 envoy:
   enabled: true
-  securityContext:
-    capabilities:
-      keepCapNetBindService: true
-      envoy:
-        - NET_BIND_SERVICE
 
 hubble:
   enabled: true
