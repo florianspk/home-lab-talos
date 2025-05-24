@@ -16,6 +16,7 @@ securityContext:
       - SETGID
       - SETUID
       - NET_BIND_SERVICE
+      - CAP_BPF
     cleanCiliumState:
       - NET_ADMIN
       - SYS_ADMIN
