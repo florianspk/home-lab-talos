@@ -58,14 +58,7 @@ gatewayAPI:
 
 envoy:
   enabled: true
-  securityContext:
-    capabilities:
-      keepCapNetBindService: true
-      envoy:
-        - CAP_NET_ADMIN
-        - CAP_SYS_ADMIN
-        - CAP_BPF
-        - NET_BIND_SERVICE
+
 hubble:
   enabled: true
   relay:
