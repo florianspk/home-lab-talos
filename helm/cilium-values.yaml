@@ -30,22 +30,18 @@ k8sService:
   port: "7445"
 
 kubeProxyReplacement: true
+
 l2announcements:
   enabled: true
 
-devices: "{eth0}"
-
-ingressController:
-  enabled: true
-  default: true
-  loadbalancerMode: "shared"
-  enforceHttps: false
+extraArgs:
+  - --devices=eth+
 
 gatewayAPI:
   enabled: true
-  enableProxyProtocol: true
   gatewayClass:
     create: "true"
+  enableProxyProtocol: true
   enableAlpn: true
   enableAppProtocol: true
   xffNumTrustedHops: 1
@@ -53,9 +49,23 @@ gatewayAPI:
   secretsNamespace:
     name: "cilium-secrets"
     sync: true
+    create: true
 
 envoy:
   enabled: true
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+ingressController:
+  enabled: true
+  default: true
+  loadbalancerMode: "shared"
+  enforceHttps: false
 
 hubble:
   enabled: true
@@ -83,5 +93,18 @@ prometheus:
   enabled: true
 
 operator:
+  enabled: true
   prometheus:
     enabled: true
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+l7Proxy: true
+
+bpf:
+  masquerade: true
