@@ -44,6 +44,10 @@ ingressController:
 gatewayAPI:
   enabled: true
   enableProxyProtocol: true
+  gatewayClass:
+    create: true
+  hostNetwork:
+    enabled: true
   enableAlpn: true
   enableAppProtocol: true
   xffNumTrustedHops: 1
@@ -54,6 +58,11 @@ gatewayAPI:
 
 envoy:
   enabled: true
+  securityContext:
+    capabilities:
+      keepCapNetBindService: true
+      envoy:
+        - NET_BIND_SERVICE
 
 hubble:
   enabled: true
