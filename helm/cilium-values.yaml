@@ -105,6 +105,5 @@ operator:
       memory: 128Mi
 
 l7Proxy: true
-
 bpf:
   masquerade: true
