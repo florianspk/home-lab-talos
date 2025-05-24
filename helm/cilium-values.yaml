@@ -45,7 +45,7 @@ gatewayAPI:
   enabled: true
   enableProxyProtocol: true
   gatewayClass:
-    create: true
+    create: "true"
   hostNetwork:
     enabled: true
   enableAlpn: true
