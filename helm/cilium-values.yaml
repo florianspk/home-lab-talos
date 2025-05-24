@@ -1,4 +1,3 @@
-@@ -0,0 +1,85 @@
 ipam:
   mode: "kubernetes"
 
