@@ -158,3 +158,17 @@ variable "dns_serveurs" {
   type    = list(string)
   default = ["1.1.1.1", "8.8.8.8"]
 }
+
+variable "extra_disks_per_node" {
+  description = "Disques supplémentaires par nœud"
+  type = map(list(object({
+    size         = number
+    datastore_id = string
+    interface    = string
+    ssd          = optional(bool, true)
+    discard      = optional(string, "on")
+    file_format  = optional(string, "raw")
+    iothread     = optional(bool, true)
+  })))
+  default = {}
+}

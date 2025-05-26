@@ -17,7 +17,7 @@ resource "proxmox_virtual_environment_file" "talos" {
 resource "proxmox_virtual_environment_vm" "controller" {
   count           = var.controller_count
   name            = "${var.prefix}-${local.controller_nodes[count.index].name}"
-  node_name       = var.proxmox_pve_node_name[count.index % 2]
+  node_name       = var.proxmox_pve_node_name[count.index % length(var.proxmox_pve_node_name)]
   tags            = sort(concat(var.tags, ["controller"]))
   stop_on_destroy = true
   bios            = "ovmf"
@@ -57,7 +57,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
     discard      = "on"
     size         = 30
     file_format  = "raw"
-    file_id      = proxmox_virtual_environment_file.talos[var.proxmox_pve_node_name[count.index % 2]].id
+    file_id      = proxmox_virtual_environment_file.talos[var.proxmox_pve_node_name[count.index % length(var.proxmox_pve_node_name)]].id
   }
   agent {
     enabled = true
@@ -77,7 +77,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
 resource "proxmox_virtual_environment_vm" "worker" {
   count           = var.worker_count
   name            = "${var.prefix}-${local.worker_nodes[count.index].name}"
-  node_name       = var.proxmox_pve_node_name[count.index % 2]
+  node_name       = var.proxmox_pve_node_name[count.index % length(var.proxmox_pve_node_name)]
   tags            = sort(concat(var.tags, ["worker"]))
   stop_on_destroy = true
   bios            = "ovmf"
@@ -117,7 +117,7 @@ resource "proxmox_virtual_environment_vm" "worker" {
     discard      = "on"
     size         = 40
     file_format  = "raw"
-    file_id      = proxmox_virtual_environment_file.talos[var.proxmox_pve_node_name[count.index % 2]].id
+    file_id      = proxmox_virtual_environment_file.talos[var.proxmox_pve_node_name[count.index % length(var.proxmox_pve_node_name)]].id
   }
   disk {
     datastore_id = "local-lvm-1"
@@ -127,6 +127,18 @@ resource "proxmox_virtual_environment_vm" "worker" {
     discard      = "on"
     size         = 60
     file_format  = "raw"
+  }
+  dynamic "disk" {
+    for_each = lookup(var.extra_disks_per_node, var.proxmox_pve_node_name[count.index % length(var.proxmox_pve_node_name)], [])
+    content {
+      size         = disk.value.size
+      datastore_id = disk.value.datastore_id
+      interface    = disk.value.interface
+      iothread     = try(disk.value.iothread, true)
+      ssd          = try(disk.value.ssd, true)
+      discard      = try(disk.value.discard, "on")
+      file_format  = try(disk.value.file_format, "raw")
+    }
   }
   agent {
     enabled = true

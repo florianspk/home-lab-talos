@@ -71,3 +71,16 @@ EOF
         /dev/sdb
     fi
   done
+
+for ((n=0; n<${#nodes[@]}; ++n)); do
+    local node="w$((n))"
+    while ! kubectl linstor storage-pool list --node "$node" >/dev/null 2>&1; do sleep 3; done
+    if ! kubectl linstor storage-pool list --node "$node" --storage-pool lvm-media | grep -q lvm-media; then
+      kubectl linstor physical-storage create-device-pool \
+        --pool-name lvm-media \
+        --storage-pool lvm-media \
+        lvm \
+        "$node" \
+        /dev/sdc
+    fi
+done
