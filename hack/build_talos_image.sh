@@ -7,7 +7,7 @@ talos_version="1.10.3"
 
 # Extensions
 # renovate: datasource=docker depName=ghcr.io/siderolabs/qemu-guest-agent
-talos_qemu_guest_agent_extension_tag="10.0.0"
+talos_qemu_guest_agent_extension_tag="10.0.2"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/drbd
 talos_drbd_extension_tag="9.2.13-v1.10.0"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/spin
