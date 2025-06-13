@@ -1,22 +1,12 @@
 #!/bin/bash
 set -euo pipefail
-<<<<<<< HEAD
-talos_version="1.10.4"
-talos_qemu_guest_agent_extension_tag="10.0.2"
-talos_drbd_extension_tag="9.2.13-v1.10.4"
-=======
-
-# Version Talos
 # renovate: datasource=github-releases depName=siderolabs/talos
-talos_version="1.10.3"
-
-# Extensions
+talos_version="1.10.4"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/qemu-guest-agent
-talos_qemu_guest_agent_extension_tag="10.0.0"
+talos_qemu_guest_agent_extension_tag="10.0.2"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/drbd
-talos_drbd_extension_tag="9.2.13-v1.10.0"
+talos_drbd_extension_tag="9.2.13-v1.10.4"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/spin
->>>>>>> 9d597e9f6c1fdc1e74bf597078b1a7973e8be581
 talos_spin_extension_tag="v0.19.0"
 
 function step {
