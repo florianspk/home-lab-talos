@@ -2,11 +2,30 @@ resource "random_shuffle" "node_shuffle" {
   input = var.proxmox_pve_node_name
 }
 
+locals {
+  # Fonction pour déterminer le datastore à utiliser selon le nœud
+  get_datastore_for_controller = {
+    for i in range(var.controller_count) : i => lookup(
+      var.datastore_per_node,
+      var.proxmox_pve_node_name[i % length(var.proxmox_pve_node_name)],
+      var.default-datastoreid
+    )
+  }
+
+  get_datastore_for_worker = {
+    for i in range(var.worker_count) : i => lookup(
+      var.datastore_per_node,
+      var.proxmox_pve_node_name[i % length(var.proxmox_pve_node_name)],
+      var.default-datastoreid
+    )
+  }
+}
+
 
 resource "proxmox_virtual_environment_file" "talos" {
   for_each     = toset(var.proxmox_pve_node_name)
   node_name    = each.value
-  datastore_id = var.talos-iso-datastoreid
+  datastore_id = var.default-iso-datastoreid
   content_type = "iso"
   source_file {
     path      = "tmp/talos/talos-${var.talos_version}.qcow2"
@@ -41,16 +60,16 @@ resource "proxmox_virtual_environment_vm" "controller" {
     mtu    = 1
   }
   tpm_state {
-    datastore_id = var.talos-iso-datastoreid-cp
+    datastore_id = local.get_datastore_for_controller[count.index]
     version      = "v2.0"
   }
   efi_disk {
-    datastore_id = var.talos-iso-datastoreid-cp
+    datastore_id = local.get_datastore_for_controller[count.index]
     file_format  = "raw"
     type         = "4m"
   }
   disk {
-    datastore_id = var.talos-iso-datastoreid-cp
+    datastore_id = local.get_datastore_for_controller[count.index]
     interface    = "scsi0"
     iothread     = true
     ssd          = true
@@ -64,7 +83,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
     trim    = true
   }
   initialization {
-    datastore_id = "local"
+    datastore_id = local.get_datastore_for_controller[count.index]
     ip_config {
       ipv4 {
         address = "${local.controller_nodes[count.index].address}/24"
@@ -101,16 +120,16 @@ resource "proxmox_virtual_environment_vm" "worker" {
     mtu    = 1
   }
   tpm_state {
-    datastore_id = "local-lvm-1"
+    datastore_id = local.get_datastore_for_worker[count.index]
     version      = "v2.0"
   }
   efi_disk {
-    datastore_id = "local-lvm-1"
+    datastore_id = local.get_datastore_for_worker[count.index]
     file_format  = "raw"
     type         = "4m"
   }
   disk {
-    datastore_id = "local-lvm-1"
+    datastore_id = local.get_datastore_for_worker[count.index]
     interface    = "scsi0"
     iothread     = true
     ssd          = true
@@ -120,7 +139,7 @@ resource "proxmox_virtual_environment_vm" "worker" {
     file_id      = proxmox_virtual_environment_file.talos[var.proxmox_pve_node_name[count.index % length(var.proxmox_pve_node_name)]].id
   }
   disk {
-    datastore_id = "local-lvm-1"
+    datastore_id = local.get_datastore_for_worker[count.index]
     interface    = "scsi1"
     iothread     = true
     ssd          = true
@@ -145,7 +164,7 @@ resource "proxmox_virtual_environment_vm" "worker" {
     trim    = true
   }
   initialization {
-    datastore_id = "local"
+    datastore_id = local.get_datastore_for_worker[count.index]
     ip_config {
       ipv4 {
         address = "${local.worker_nodes[count.index].address}/24"

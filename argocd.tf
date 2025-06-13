@@ -1,6 +1,7 @@
 locals {
-  argocd_domain    = "argocd.${var.ingress_domain}"
-  argocd_namespace = "argocd"
+  argocd_domain             = "argocd.${var.ingress_domain}"
+  argocd_bootstrap_repo_url = var.bootstrap_repo_url
+  argocd_namespace          = "argocd"
   argocd_manifests = [
     # create the argocd-server tls secret.
     # NB argocd-server will automatically reload this secret.
@@ -41,6 +42,26 @@ locals {
         }
       }
     },
+    {
+      apiVersion = "argoproj.io/v1alpha1"
+      kind       = "Application"
+      metadata = {
+        name      = "bootstrap"
+        namespace = local.argocd_namespace
+      }
+      spec = {
+        destination = {
+          namespace = local.argocd_namespace
+          server    = "https://kubernetes.default.svc"
+        }
+        project = "default"
+        source = {
+          path           = "bootstrap"
+          repoURL        = local.argocd_bootstrap_repo_url
+          targetRevision = "HEAD"
+        }
+      }
+    }
   ]
   argocd_manifest = join("---\n", [for d in local.argocd_manifests : yamlencode(d)])
 }

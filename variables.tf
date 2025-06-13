@@ -76,6 +76,12 @@ variable "cluster_node_network_load_balancer_last_hostnum" {
   default     = 80
 }
 
+variable "bootstrap_repo_url" {
+  description = "the DNS domain of the ingress resources"
+  type        = string
+  default     = "https://github.com/florianspk/argocd-apps-homelab.git"
+}
+
 variable "ingress_domain" {
   description = "the DNS domain of the ingress resources"
   type        = string
@@ -110,18 +116,22 @@ variable "prefix" {
   default = "vm-talos"
 }
 
-variable "talos-iso-datastoreid" {
+variable "default-iso-datastoreid" {
   type    = string
   default = "local"
 }
-variable "talos-datastoreid" {
+variable "default-datastoreid" {
   type    = string
   default = "local-lvm-1"
 }
 
-variable "talos-iso-datastoreid-cp" {
-  type    = string
-  default = "pve-data"
+variable "datastore_per_node" {
+  type = map(string)
+  default = {
+    #exemple : "pve01" = "ssd-storage"
+    #         "pve02" = "local-lvm-2"
+    #pas besoin d’ajouter un noeud ici s’il doit utiliser la valeur par défaut
+  }
 }
 
 variable "api_token" {
