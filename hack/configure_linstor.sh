@@ -72,6 +72,20 @@ EOF
     fi
   done
 
+kubectl apply -f - <<EOF
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+provisioner: linstor.csi.linbit.com
+metadata:
+  name: linstor-lvm-media
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+parameters:
+  csi.storage.k8s.io/fstype: xfs
+  linstor.csi.linbit.com/autoPlace: "1"
+  linstor.csi.linbit.com/storagePool: lvm-media
+EOF
 for ((n=0; n<${#nodes[@]}; ++n)); do
     local node="w$((n))"
     while ! kubectl linstor storage-pool list --node "$node" >/dev/null 2>&1; do sleep 3; done
