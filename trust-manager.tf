@@ -13,7 +13,7 @@ data "helm_template" "trust_manager" {
   repository = "https://charts.jetstack.io"
   chart      = "trust-manager"
   # renovate: datasource=helm depName=trust-manager registryUrl=https://charts.jetstack.io
-  version      = "0.17.1"
+  version      = "0.18.0"
   kube_version = var.kubernetes_version
   api_versions = []
   values       = [file("${path.module}/helm/trust-manager-values.yaml")]
