@@ -2,7 +2,9 @@ global:
   domain: "argocd.wheezy.lab"
 configs:
   cm:
-    accounts.admin: apiKey
+    accounts.readonly: apiKey
+  rbac:
+    policy.csv: "g, readonly, role:readonly"
 
   params:
     server.insecure: true
