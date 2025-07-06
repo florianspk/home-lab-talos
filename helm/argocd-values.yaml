@@ -4,7 +4,7 @@ configs:
   cm:
     accounts.readonly: apiKey
     statusbadge.enabled: true
-    statusbadge.url: https://argocd-badge.wheezy.fr
+    statusbadge.url: https://argocd-badge.wheezy.fr/
   rbac:
     policy.csv: "g, readonly, role:readonly"
 
