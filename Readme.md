@@ -1,196 +1,183 @@
-# Talos Setup and Usage Guide
+<div align="center">
 
-This document provides guidance on how to set up and manage Talos, including configuring extensions and using Terraform for deployment. Below are the steps and references you’ll need to achieve the same functionality previously encapsulated in the script.
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="16" height="16"> Mon Homelab Kubernetes <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6a7/512.gif" alt="🚧" width="16" height="16">
 
----
+<img src="assets/wheezy_logo.png" align="center"  height="250px"/>
 
-## Prerequisites
 
-- [Talos CLI](https://github.com/siderolabs/talos/releases) installed on your machine.
-- Docker installed and running for building images.
-- [Terraform](https://www.terraform.io/downloads) installed and configured.
-- Access to the following GitHub repositories for extensions and images:
-  - [QEMU Guest Agent](https://github.com/siderolabs/extensions/tree/main/guest-agents/qemu-guest-agent)
-  - [DRBD](https://github.com/siderolabs/extensions/tree/main/storage/drbd)
-  - [Spin](https://github.com/siderolabs/extensions/tree/main/container-runtime/spin)
-  - [Piraeus Operator](https://github.com/piraeusdatastore/piraeus-operator/releases)
+_... géré avec Terraform, ArgoCD, et Talos Linux_ <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f916/512.gif" alt="🤖" width="16" height="16">
 
----
+</div>
 
-## Environment Variables
+<div align="center">
 
-Set the following environment variables in your shell:
+[![Talos](https://img.shields.io/badge/Talos-Linux-blue?style=for-the-badge&logo=talos&logoColor=white)](https://talos.dev)&nbsp;&nbsp;
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.32.2-blue?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io)&nbsp;&nbsp;
+[![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-blue?style=for-the-badge&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io)&nbsp;&nbsp;
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-blue?style=for-the-badge&logo=terraform&logoColor=white)](https://terraform.io)
 
-```bash
-export CHECKPOINT_DISABLE='1'
-export TF_LOG='DEBUG' # Options: TRACE, DEBUG, INFO, WARN, ERROR
-export TF_LOG_PATH='terraform.log'
+</div>
 
-export TALOSCONFIG=~/.talos/config
-export KUBECONFIG=~/.kube/config-talos
+<div align="center">
 
-export TALOS_VERSION='<talos_version>'
-export K8S_CLUSTER_NAME='<cluster_name>'
-export K8S_NAMESPACE='<namespace>'
-```
+[![Tailscale](https://img.shields.io/badge/Tailscale-VPN-brightgreen?style=for-the-badge&logo=tailscale&logoColor=white)](https://tailscale.com)&nbsp;&nbsp;
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-ZeroTrust-brightgreen?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com)&nbsp;&nbsp;
+[![Proxmox](https://img.shields.io/badge/Proxmox-VE-brightgreen?style=for-the-badge&logo=proxmox&logoColor=white)](https://proxmox.com)
 
----
+</div>
 
-## Terraform Variables Reference
+<div align="center">
 
-| Variable Name                                           | Type          | Default Value                     | Description                                                                                 |
-|--------------------------------------------------------|---------------|-----------------------------------|---------------------------------------------------------------------------------------------|
-| `proxmox_pve_node_name`                                | `list(string)`| `['pve01', 'pve02', 'pve03']`    | List of Proxmox node names.                                                                |
-| `talos_version`                                        | `string`      | `1.8.3`                           | Version of Talos to deploy.                                                                |
-| `kubernetes_version`                                   | `string`      | `1.31.3`                          | Version of Kubernetes to deploy.                                                           |
-| `cluster_name`                                         | `string`      | `example`                         | Name for the Talos cluster.                                                                |
-| `cluster_vip`                                          | `string`      | `172.31.1.10`                     | Virtual IP (VIP) address of the Kubernetes API server.                                      |
-| `cluster_endpoint`                                     | `string`      | `https://172.31.1.10:6443`        | Endpoint for the Kubernetes API server.                                                    |
-| `cluster_node_network_gateway`                        | `string`      | `172.31.1.1`                      | Gateway for cluster nodes' network.                                                        |
-| `cluster_node_network`                                | `string`      | `172.31.1.0/24`                   | CIDR block of the cluster node network.                                                    |
-| `cluster_node_network_first_controller_hostnum`       | `number`      | `40`                              | Host number for the first controller.                                                      |
-| `cluster_node_network_first_worker_hostnum`           | `number`      | `50`                              | Host number for the first worker node.                                                     |
-| `cluster_node_network_load_balancer_first_hostnum`    | `number`      | `70`                              | Host number for the first load balancer.                                                   |
-| `cluster_node_network_load_balancer_last_hostnum`     | `number`      | `80`                              | Host number for the last load balancer.                                                    |
-| `ingress_domain`                                       | `string`      | `example.test`                    | DNS domain for ingress resources.                                                          |
-| `controller_count`                                     | `number`      | `1`                               | Number of control plane nodes. Must be at least 1.                                          |
-| `worker_count`                                         | `number`      | `2`                               | Number of worker nodes. Must be at least 1.                                                |
-| `prefix`                                               | `string`      | `vm-talos`                        | Prefix for VM names.                                                                       |
-| `talos-iso-datastoreid`                                | `string`      | `local-lvm`                        | Datastore ID for Talos ISO images.                                                         |
-| `talos-datastoreid`                            | `string`      | `local-lvm-1`                       | Datastore suffix for Talos VMs.                                                            |
-| `api_token`                                            | `string`      | `XXXXXXXXXXX`                     | Secret token for authenticating with Proxmox.                                              |
+[![CPU-Usage](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_cpu_usage&style=flat-square&label=CPU)](https://kromgo.wheezy.fr)&nbsp;&nbsp;
+[![Memory-Usage](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_memory_usage&style=flat-square&label=Memory)](https://kromgo.wheezy.fr)&nbsp;&nbsp;
+[![Node-Count](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_nodes_ready)](https://kromgo.wheezy.fr)&nbsp;&nbsp;
+[![Pod-Count](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_pods_running)](https://kromgo.wheezy.fr)&nbsp;&nbsp;
+</div>
 
 ---
 
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4a1/512.gif" alt="💡" width="20" height="20"> Vue d'ensemble
 
-## Build Talos Images
+Ce repository contient l'infrastructure complète de mon homelab Kubernetes. J'applique les principes d'Infrastructure as Code (IaC) et GitOps en utilisant [Terraform](https://www.terraform.io/) pour le provisioning, [Talos Linux](https://www.talos.dev/) comme OS des nœuds, et [ArgoCD](https://argo-cd.readthedocs.io/) pour le déploiement des applications.
 
-### References:
-- [Talos Boot Assets Guide](https://www.talos.dev/v1.8/talos-guides/install/boot-assets/)
-- [Talos Advanced Metal Network Configuration](https://www.talos.dev/v1.8/advanced/metal-network-configuration/)
+L'infrastructure est hébergée sur [Proxmox VE](https://proxmox.com/) et j'utilise [Tailscale](https://tailscale.com/) pour l'accès privé sécurisé ainsi que [Cloudflare Zero Trust](https://www.cloudflare.com/) pour l'exposition publique des services.
 
-### Steps:
+---
 
-### TL;DR
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f331/512.gif" alt="🌱" width="20" height="20"> Kubernetes
 
-You can simply run the automated script to build Talos images:
+Mon cluster Kubernetes est déployé avec [Talos Linux](https://www.talos.dev/) sur deux serveurs physiques sous Proxmox VE. Le cluster utilise un stockage distribué avec [Linstor](https://linbit.com/linstor/) pour la persistance des données.
 
-```bash
-./hack/build_talos_image.sh
-```
+Le repository des applications ArgoCD se trouve ici : [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab)
 
-This script handles all the image building steps automatically including configuration, Docker image creation, and conversion to the required format.
+### Composants principaux
 
-### Detailed Steps
+- **[talos](https://www.talos.dev/)** : OS minimal et sécurisé pour Kubernetes
+- **[cilium](https://github.com/cilium/cilium)** : CNI basé sur eBPF avec ingress controller intégré
+- **[argocd](https://argo-cd.readthedocs.io/)** : Déploiement GitOps des applications
+- **[cert-manager](https://github.com/cert-manager/cert-manager)** : Gestion automatique des certificats SSL/TLS
+- **[trust-manager](https://github.com/cert-manager/trust-manager)** : Distribution des CA pour les DNS privés
+- **[linstor](https://linbit.com/linstor/)** : Stockage distribué haute disponibilité
 
+### GitOps avec ArgoCD
 
-1. Prepare a configuration file `talos-<version>.yml` based on your requirements.
-2. Use the Talos Imager Docker image to build the Talos disk image:
+[ArgoCD](https://argo-cd.readthedocs.io/) surveille le repository [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab) et synchronise automatiquement l'état désiré des applications avec le cluster Kubernetes.
 
-```bash
-docker run --rm -i \
-  -v $PWD/tmp/talos:/secureboot:ro \
-  -v $PWD/tmp/talos:/out \
-  -v /dev:/dev \
-  --privileged \
-  "ghcr.io/siderolabs/imager:<talos_version_tag>" \
-  - < "tmp/talos/talos-<version>.yml"
-```
-3. Convert the generated raw image to QCOW2 format for use with QEMU:
+Les applications sont organisées par famille et par cluster, permettant une gestion granulaire des déploiements et des mises à jour.
 
-```bash
-qemu-img convert -O qcow2 tmp/talos/nocloud-amd64.raw tmp/talos/talos-<version>.qcow2
-qemu-img info tmp/talos/talos-<version>.qcow2
+### Structure des répertoires
+
+```sh
+📁 argocd-apps-homelab
+├── 📁 apps
+│     ├── 📁 apps-ops
+│     ├── 📁 apps-monitoring
+│         ├── 📁 kube-prometheus-stack
+│         │    ├── 📁 extras
+│         │    ├── 📄 prd.json
+│         │    ├── 📄 dev.json
+│         │    └── 📄 staging.json
+│         └── 📁 apps-ops
+│
+├── 📁 bootstrap
+├── 📁 projects
+└── 📄 renovate.json
 ```
 
 ---
 
-## Deploying with Terraform
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f30e/512.gif" alt="🌎" width="20" height="20"> Réseau
 
-### Steps:
+### DNS et accès sécurisé
 
-1. Initialize Terraform:
+Le cluster utilise une approche hybride pour la gestion DNS et l'accès réseau :
 
-```bash
-terraform init
-```
+- **DNS privé** : Intégration avec le DNS interne du cluster via cert-manager et une CA privée
+- **Tailscale** : VPN mesh pour l'accès administratif aux interfaces (pfSense, Proxmox)
+- **Split DNS** : Configuration sur Tailscale pour résoudre les services internes
+- **Cloudflare Zero Trust** : Exposition sécurisée des services publics
 
-2. Plan the deployment:
+### Ingress et Load Balancing
 
-```bash
-terraform plan -out=tfplan -var-file=integration.tfvars
-```
-
-3. Apply the deployment:
-
-```bash
-terraform apply tfplan
-```
-
-4. Extract configuration files for Talos and Kubernetes:
-
-```bash
-terraform output -raw talosconfig > ~/.talos/config
-terraform output -raw kubeconfig > ~/.kube/config-talos
-```
+Cilium assure à la fois les fonctions de CNI et d'ingress controller, offrant :
+- Load balancing L4/L7 natif
+- Politique réseau fine avec eBPF
+- Observabilité réseau avancée
+- Intégration native avec les services Kubernetes
 
 ---
 
-## Installing Piraeus Operator
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/2699_fe0f/512.gif" alt="⚙" width="20" height="20"> Infrastructure
 
-### References:
-- [Piraeus Talos Guide](https://github.com/piraeusdatastore/piraeus-operator/blob/v2.7.1/docs/how-to/talos.md)
-- [Piraeus Get Started Guide](https://github.com/piraeusdatastore/piraeus-operator/blob/v2.7.1/docs/tutorial/get-started.md)
-- [LINBIT DRBD Documentation](https://linbit.com/drbd-user-guide/)
+### Matériel
 
-### Steps:
+| Serveur | CPU | RAM | Stockage | Rôle | Spécificités |
+|---------|-----|-----|----------|------|-------------|
+| pve01 | Intel i5 5ème gen | 32GB | 4 To SSD | Kubernetes Master/Worker | NVIDIA GTX 1060 |
+| pve02 | Intel i5 5ème gen | 32GB | 1 To SSD | Kubernetes Worker | - |
 
-1. Install the operator:
+### Hyperviseur
 
-```bash
-kubectl apply --server-side -k "https://github.com/piraeusdatastore/piraeus-operator//config/default?ref=v2.7.1"
-```
+- **[Proxmox VE](https://proxmox.com/)** : Plateforme de virtualisation pour héberger les VMs Talos
+- **Terraform Provider** : Automatisation du provisioning des ressources Proxmox
 
-2. Wait for the operator to be ready:
+### Stockage
 
-```bash
-kubectl wait pod --timeout=15m --for=condition=Ready -n piraeus-datastore -l app.kubernetes.io/component=piraeus-operator
-```
-
-3. Configure the Piraeus cluster and storage class:
-
-Refer to the examples in the [Piraeus Talos Guide](https://github.com/piraeusdatastore/piraeus-operator/blob/v2.7.1/docs/how-to/talos.md).
+- **[Linstor](https://linbit.com/linstor/)** : Stockage distribué DRBD pour la haute disponibilité
+- **Configuration manuelle** : Scripts de déploiement dans le dossier `hack/`
+- **Réplication** : Données répliquées entre les deux nœuds
 
 ---
 
-## Health Checks and Info Retrieval
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f636_200d_1f32b_fe0f/512.gif" alt="😶" width="20" height="20"> Services Cloud
 
-### Talos Health:
+Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur quelques services cloud pour les besoins critiques :
 
-```bash
-talosctl health --control-plane-nodes <controller_ips> --worker-nodes <worker_ips>
-```
-
-### Kubernetes Node Info:
-
-```bash
-kubectl get nodes -o wide
-```
-
-### Piraeus Storage Info:
-
-```bash
-kubectl linstor node list
-kubectl linstor storage-pool list
-kubectl linstor volume list
-```
+| Service | Utilisation | Coût |
+|---------|-------------|------|
+| [Tailscale](https://tailscale.com/) | VPN mesh et accès administratif | Gratuit |
+| [Cloudflare](https://www.cloudflare.com/) | Zero Trust et DNS public | Gratuit|
+| [GitHub](https://github.com/) | Hébergement des repositories et CI/CD | Gratuit |
 
 ---
 
-## Destroying the Deployment
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="20" height="20"> Déploiement
 
-To clean up all resources:
+### Prérequis
 
-```bash
-terraform destroy -auto-approve
-```
+- Proxmox VE configuré avec les VMs
+- Terraform installé
+- Talosctl installé
+- Accès aux credentials Proxmox
+
+### Étapes de déploiement
+
+1. **Build custom talos image**
+   ```bash
+   chmod +x ./hack/build_talos_image.sh
+   ./hack/build_talos_image.sh
+   ```
+
+2. **Provisioning Terraform**
+   ```bash
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
+
+3. **Déploiement Linstor**
+   ```bash
+   chmod +x ./hack/configure_linstor
+   ./hack/configure_linstor
+   ```
+
+4. **Configuration ArgoCD**
+   - ArgoCD se déploie automatiquement
+   - Fork le repo  [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab) et modifier bootstrap_repo_url
+
+---
+
+## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4dd/512.gif" alt="📝" width="20" height="20"> Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
