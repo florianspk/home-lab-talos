@@ -2,6 +2,9 @@
 
 ## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="16" height="16"> Mon Homelab Kubernetes <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6a7/512.gif" alt="🚧" width="16" height="16">
 
+<img src="assets/wheezy_logo.png" align="center" width="175px" height="175px"/>
+
+
 _... géré avec Terraform, ArgoCD, et Talos Linux_ <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f916/512.gif" alt="🤖" width="16" height="16">
 
 </div>
@@ -9,7 +12,7 @@ _... géré avec Terraform, ArgoCD, et Talos Linux_ <img src="https://fonts.gsta
 <div align="center">
 
 [![Talos](https://img.shields.io/badge/Talos-Linux-blue?style=for-the-badge&logo=talos&logoColor=white)](https://talos.dev)&nbsp;&nbsp;
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.29-blue?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io)&nbsp;&nbsp;
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.32.2-blue?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io)&nbsp;&nbsp;
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-blue?style=for-the-badge&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io)&nbsp;&nbsp;
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-blue?style=for-the-badge&logo=terraform&logoColor=white)](https://terraform.io)
 
@@ -37,7 +40,7 @@ _... géré avec Terraform, ArgoCD, et Talos Linux_ <img src="https://fonts.gsta
 
 Ce repository contient l'infrastructure complète de mon homelab Kubernetes. J'applique les principes d'Infrastructure as Code (IaC) et GitOps en utilisant [Terraform](https://www.terraform.io/) pour le provisioning, [Talos Linux](https://www.talos.dev/) comme OS des nœuds, et [ArgoCD](https://argo-cd.readthedocs.io/) pour le déploiement des applications.
 
-L'infrastructure est hébergée sur [Proxmox VE](https://proxmox.com/) et utilise [Tailscale](https://tailscale.com/) pour l'accès privé sécurisé ainsi que [Cloudflare Zero Trust](https://www.cloudflare.com/) pour l'exposition publique des services.
+L'infrastructure est hébergée sur [Proxmox VE](https://proxmox.com/) et j'utilise [Tailscale](https://tailscale.com/) pour l'accès privé sécurisé ainsi que [Cloudflare Zero Trust](https://www.cloudflare.com/) pour l'exposition publique des services.
 
 ---
 
@@ -55,22 +58,30 @@ Le repository des applications ArgoCD se trouve ici : [argocd-apps-homelab](http
 - **[cert-manager](https://github.com/cert-manager/cert-manager)** : Gestion automatique des certificats SSL/TLS
 - **[trust-manager](https://github.com/cert-manager/trust-manager)** : Distribution des CA pour les DNS privés
 - **[linstor](https://linbit.com/linstor/)** : Stockage distribué haute disponibilité
-- **[external-dns](https://github.com/kubernetes-sigs/external-dns)** : Synchronisation automatique des enregistrements DNS
 
 ### GitOps avec ArgoCD
 
 [ArgoCD](https://argo-cd.readthedocs.io/) surveille le repository [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab) et synchronise automatiquement l'état désiré des applications avec le cluster Kubernetes.
 
-Les applications sont organisées par namespace et environnement, permettant une gestion granulaire des déploiements et des mises à jour.
+Les applications sont organisées par famille et par cluster, permettant une gestion granulaire des déploiements et des mises à jour.
 
 ### Structure des répertoires
 
 ```sh
-📁 homelab-infrastructure
-├── 📁 terraform          # Configuration Terraform pour Proxmox
-├── 📁 talos              # Configuration Talos Linux
-├── 📁 hack               # Scripts Linstor et utilitaires
-└── 📁 docs               # Documentation
+📁 argocd-apps-homelab
+├── 📁 apps
+│     ├── 📁 apps-ops
+│     ├── 📁 apps-monitoring
+│         ├── 📁 kube-prometheus-stack
+│         │    ├── 📁 extras
+│         │    ├── 📄 prd.json
+│         │    ├── 📄 dev.json
+│         │    └── 📄 staging.json
+│         └── 📁 apps-ops
+│
+├── 📁 bootstrap
+├── 📁 projects
+└── 📄 renovate.json
 ```
 
 ---
@@ -102,8 +113,8 @@ Cilium assure à la fois les fonctions de CNI et d'ingress controller, offrant :
 
 | Serveur | CPU | RAM | Stockage | Rôle | Spécificités |
 |---------|-----|-----|----------|------|-------------|
-| pve01 | Intel i5 5ème gen | 32GB | SSD NVMe | Kubernetes Master/Worker | NVIDIA GTX 1060 |
-| pve02 | Intel i5 5ème gen | 32GB | SSD NVMe | Kubernetes Worker | - |
+| pve01 | Intel i5 5ème gen | 32GB | 4 To SSD | Kubernetes Master/Worker | NVIDIA GTX 1060 |
+| pve02 | Intel i5 5ème gen | 32GB | 1 To SSD | Kubernetes Worker | - |
 
 ### Hyperviseur
 
@@ -124,8 +135,8 @@ Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur 
 
 | Service | Utilisation | Coût |
 |---------|-------------|------|
-| [Tailscale](https://tailscale.com/) | VPN mesh et accès administratif | ~$5/mois |
-| [Cloudflare](https://www.cloudflare.com/) | Zero Trust et DNS public | ~$0/mois |
+| [Tailscale](https://tailscale.com/) | VPN mesh et accès administratif | Gratuit |
+| [Cloudflare](https://www.cloudflare.com/) | Zero Trust et DNS public | Gratuit|
 | [GitHub](https://github.com/) | Hébergement des repositories et CI/CD | Gratuit |
 
 ---
@@ -141,40 +152,29 @@ Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur 
 
 ### Étapes de déploiement
 
-1. **Provisioning Terraform**
+1. **Build custom talos image**
    ```bash
-   cd terraform
+   chmod +x ./hack/build_talos_image.sh
+   ./hack/build_talos_image.sh
+   ```
+
+2. **Provisioning Terraform**
+   ```bash
    terraform init
    terraform plan
    terraform apply
    ```
 
-2. **Bootstrap Talos**
-   ```bash
-   cd talos
-   talosctl bootstrap --nodes <node-ip>
-   talosctl kubeconfig
-   ```
 
 3. **Déploiement Linstor**
    ```bash
-   cd hack
-   ./deploy-linstor.sh
+   chmod +x ./hack/configure_linstor
+   ./hack/configure_linstor
    ```
 
 4. **Configuration ArgoCD**
    - ArgoCD se déploie automatiquement
-   - Configurer le repository [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab)
-
----
-
-## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f64f/512.gif" alt="🙏" width="20" height="20"> Remerciements
-
-Merci à la communauté open-source et aux projets qui rendent ce homelab possible :
-- [Talos Linux](https://www.talos.dev/) pour l'OS Kubernetes sécurisé
-- [ArgoCD](https://argo-cd.readthedocs.io/) pour le GitOps
-- [Cilium](https://cilium.io/) pour le networking eBPF
-- [Linstor](https://linbit.com/linstor/) pour le stockage distribué
+   - Fork le repo  [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab) et modifier bootstrap_repo_url
 
 ---
 
