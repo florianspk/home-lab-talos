@@ -16,6 +16,10 @@ configs:
     applicationsetcontroller.repo.server.plaintext: true
     reposerver.disable.tls: true
     dexserver.disable.tls: true
+
+dex:
+  enabled: false
+
 server:
   ingress:
     enabled: true
