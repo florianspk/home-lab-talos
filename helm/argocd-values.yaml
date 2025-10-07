@@ -1,8 +1,15 @@
+global:
+  domain: "argocd.wheezy.lab"
+
 configs:
   # Configuration principale ArgoCD
   cm:
+    # URL publique d'ArgoCD
+    url: "https://argocd.wheezy.lab"
+
     # Comptes API
     accounts.readonly: apiKey
+
     # Status badge
     statusbadge.enabled: true
     statusbadge.url: "https://argocd-badge.wheezy.fr/"
