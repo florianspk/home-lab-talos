@@ -7,7 +7,7 @@ talos_qemu_guest_agent_extension_tag="10.1.1"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/drbd
 talos_drbd_extension_tag="9.2.13-v1.10.4"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/spin
-talos_spin_extension_tag="0.21.0"
+talos_spin_extension_tag="0.22.0"
 
 function step {
   echo "### $* ###"
