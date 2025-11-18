@@ -11,9 +11,9 @@ _... géré avec Terraform, ArgoCD, et Talos Linux_ <img src="https://fonts.gsta
 
 <div align="center">
 
-[![Talos](https://img.shields.io/endpoint?url=https://api.allorigins.win/raw?url=https%3A%2F%2Fkromgo.wheezy.fr%2Ftalos_version&style=for-the-badge&logo=talos&logoColor=white&label=Talos&color=blue)](https://talos.dev)&nbsp;&nbsp;
-[![Kubernetes](https://img.shields.io/endpoint?url=https://api.allorigins.win/raw?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fkubelet_version&style=for-the-badge&logo=kubernetes&logoColor=white&label=Kubernetes&color=blue)](https://kubernetes.io)&nbsp;&nbsp;
-[![ArgoCD](https://img.shields.io/endpoint?url=https://api.allorigins.win/raw?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fargocd_version&style=for-the-badge&logo=argo&logoColor=white&label=ArgoCD&color=blue)](https://argo-cd.readthedocs.io)&nbsp;&nbsp;
+[![Talos](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Ftalos_version&style=for-the-badge&logo=talos&logoColor=white&label=Talos&color=blue)](https://talos.dev)&nbsp;&nbsp;
+[![Kubernetes](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fkubelet_version&style=for-the-badge&logo=kubernetes&logoColor=white&label=Kubernetes&color=blue)](https://kubernetes.io)&nbsp;&nbsp;
+[![ArgoCD](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fargocd_version&style=for-the-badge&logo=argo&logoColor=white&label=ArgoCD&color=blue)](https://argo-cd.readthedocs.io)&nbsp;&nbsp;
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-blue?style=for-the-badge&logo=terraform&logoColor=white)](https://terraform.io)
 
 </div>
@@ -28,10 +28,10 @@ _... géré avec Terraform, ArgoCD, et Talos Linux_ <img src="https://fonts.gsta
 
 <div align="center">
 
-[![CPU-Usage](https://img.shields.io/endpoint?url=https://api.allorigins.win/raw?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_cpu_usage&style=flat-square&label=CPU)]("")&nbsp;&nbsp;
-[![Memory-Usage](https://img.shields.io/endpoint?url=https://api.allorigins.win/raw?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_memory_usage&style=flat-square&label=Memory)]("")&nbsp;&nbsp;
-[![Node-Count](https://img.shields.io/endpoint?url=https://api.allorigins.win/raw?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_nodes_ready)]("")&nbsp;&nbsp;
-[![Pod-Count](https://img.shields.io/endpoint?url=https://api.allorigins.win/raw?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_pods_running)]("")&nbsp;&nbsp;
+[![CPU-Usage](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_cpu_usage&style=flat-square&label=CPU)]("")&nbsp;&nbsp;
+[![Memory-Usage](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_memory_usage&style=flat-square&label=Memory)]("")&nbsp;&nbsp;
+[![Node-Count](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_nodes_ready)]("")&nbsp;&nbsp;
+[![Pod-Count](https://img.shields.io/endpoint?url=https%3A%2F%2Fkromgo.wheezy.fr%2Fcluster_pods_running)]("")&nbsp;&nbsp;
 </div>
 
 ---
