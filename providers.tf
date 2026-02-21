@@ -4,7 +4,7 @@ terraform {
   required_providers {
     random = {
       source  = "hashicorp/random"
-      version = "3.7.2"
+      version = "3.8.0"
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"
@@ -12,11 +12,11 @@ terraform {
     }
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.90.0"
+      version = "0.93.0"
     }
     talos = {
       source  = "siderolabs/talos"
-      version = "0.10.0"
+      version = "0.10.1"
     }
     helm = {
       source  = "hashicorp/helm"
