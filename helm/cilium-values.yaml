@@ -34,7 +34,7 @@ l2announcements:
   enabled: true
 
 extraArgs:
-  - --devices=eth+
+  - --devices=eth+,ens+
 
 gatewayAPI:
   enabled: true

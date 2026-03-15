@@ -117,7 +117,7 @@ resource "talos_machine_configuration_apply" "controller" {
           nameservers = var.dns_serveurs
           interfaces = [
             {
-              interface = "eth0"
+              interface = "ens18"
               vip = {
                 ip = var.cluster_vip
               }
@@ -208,6 +208,18 @@ resource "talos_machine_configuration_apply" "worker" {
         network = {
           hostname    = local.worker_nodes[count.index].name
           nameservers = var.dns_serveurs
+          interfaces = [
+            {
+              interface = "ens18"
+              addresses = ["${local.worker_nodes[count.index].address}/${split("/", var.cluster_node_network)[1]}"]
+              routes = [
+                {
+                  network = "0.0.0.0/0"
+                  gateway = var.cluster_node_network_gateway
+                }
+              ]
+            }
+          ]
         }
         time = {
           servers = var.ntp_serveurs
