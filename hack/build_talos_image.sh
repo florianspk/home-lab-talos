@@ -3,11 +3,11 @@ set -euo pipefail
 # renovate: datasource=github-releases depName=siderolabs/talos
 talos_version="1.12.4"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/qemu-guest-agent
-talos_qemu_guest_agent_extension_tag="10.2.0"
+talos_qemu_guest_agent_extension_tag="10.2.0@sha256:ae6ca226e7b66abdd072780408fc24b554c7c41fd2397826cf85a301133a776e"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/drbd
-talos_drbd_extension_tag="9.2.13-v1.10.4"
+talos_drbd_extension_tag="9.2.16-v1.12.4@sha256:d04e38f303a797802ef32035af8cb1127487858fa5edfb67b19d1a7c84e87159"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/spin
-talos_spin_extension_tag="0.22.0"
+talos_spin_extension_tag="v0.22.0@sha256:2ad789021ba168a868db3cbf4e8c33038678603aef11912044c084a3ff608523"
 
 function step {
   echo "### $* ###"

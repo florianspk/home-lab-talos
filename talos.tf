@@ -34,6 +34,9 @@ locals {
           {
             name = "drbd_transport_tcp"
           },
+          {
+            name = "dm_thin_pool"
+          },
         ]
       }
     }

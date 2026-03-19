@@ -13,7 +13,7 @@ locals {
       spec = {
         loadBalancerIPs = true
         interfaces = [
-          "eth0",
+          "ens18",
         ]
         nodeSelector = {
           matchExpressions = [
