@@ -50,7 +50,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
     cores = 2
   }
   memory {
-    dedicated = 6 * 1024
+    dedicated = 10 * 1024
   }
   vga {
     type = "qxl"
