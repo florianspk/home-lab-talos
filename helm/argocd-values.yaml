@@ -17,8 +17,8 @@ configs:
     # Configuration OIDC
     oidc.config: |
       name: Authentik
-      issuer: https://auth.wheezy.fr/application/o/argo-cd/
-      clientID: mda1YuKv8TyyTG8ozm62BcLsXc6R2bfrM2f6NBBi
+      issuer: https://auth.wheezy.fr/application/o/argocd/
+      clientID: COrsXQGLvA4LDBwVZL17KWmxMY2Emqm0RTULVpZw
       clientSecret: $oidc.authentik.clientSecret
       requestedScopes:
         - openid
