@@ -20,6 +20,7 @@ configs:
       issuer: https://auth.wheezy.fr/application/o/argocd/
       clientID: COrsXQGLvA4LDBwVZL17KWmxMY2Emqm0RTULVpZw
       clientSecret: $oidc.authentik.clientSecret
+      clientAuthMethod: client_secret_post
       requestedScopes:
         - openid
         - profile
