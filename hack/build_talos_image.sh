@@ -3,7 +3,7 @@ set -euo pipefail
 # renovate: datasource=github-releases depName=siderolabs/talos
 talos_version="1.12.6"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/qemu-guest-agent
-talos_qemu_guest_agent_extension_tag="10.2.1"
+talos_qemu_guest_agent_extension_tag="10.2.2"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/drbd
 talos_drbd_extension_tag="9.2.16-v1.12.4@sha256:d04e38f303a797802ef32035af8cb1127487858fa5edfb67b19d1a7c84e87159"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/spin
