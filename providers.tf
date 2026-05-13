@@ -8,7 +8,7 @@ terraform {
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"
-      version = "2.3.7"
+      version = "2.4.0"
     }
     proxmox = {
       source  = "bpg/proxmox"
