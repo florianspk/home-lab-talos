@@ -4,7 +4,7 @@ terraform {
   required_providers {
     random = {
       source  = "hashicorp/random"
-      version = "3.8.1"
+      version = "3.9.0"
     }
     cloudinit = {
       source  = "hashicorp/cloudinit"
