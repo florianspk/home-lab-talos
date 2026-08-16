@@ -57,10 +57,10 @@ configs:
   # Paramètres ArgoCD
   params:
     server.insecure: true
-    server.repo.server.plaintext: true
-    controller.repo.server.plaintext: true
-    applicationsetcontroller.repo.server.plaintext: true
-    reposerver.disable.tls: true
+    server.repo.server.plaintext: false
+    controller.repo.server.plaintext: false
+    applicationsetcontroller.repo.server.plaintext: false
+    reposerver.disable.tls: false
 
 # Dex désactivé
 dex:
