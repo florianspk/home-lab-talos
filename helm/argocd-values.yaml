@@ -60,7 +60,7 @@ configs:
     server.repo.server.plaintext: true
     controller.repo.server.plaintext: true
     applicationsetcontroller.repo.server.plaintext: true
-    reposerver.disable.tls: false
+    reposerver.disable.tls: true
 
 # Dex désactivé
 dex:
