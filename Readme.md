@@ -1,3 +1,5 @@
+
+
 <div align="center">
 
 ## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="16" height="16"> Mon Homelab Kubernetes <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6a7/512.gif" alt="🚧" width="16" height="16">
@@ -168,8 +170,8 @@ Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur 
 
 3. **Déploiement Linstor**
    ```bash
-   chmod +x ./hack/configure_linstor
-   ./hack/configure_linstor
+   chmod +x ./hack/configure_linstor.sh
+   ./hack/configure_linstor.sh
    ```
 
 4. **Configuration ArgoCD**
