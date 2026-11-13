@@ -26,7 +26,7 @@ function update-talos-extension {
       $val = $ENV{tag};
     }
     s/^(\Q$var\E=).*/$1"$val"/;
-  ' do
+  ' "$0"
 }
 
 function update-talos-extensions {

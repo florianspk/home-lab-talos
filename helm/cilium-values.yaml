@@ -68,6 +68,10 @@ ingressController:
 
 hubble:
   enabled: true
+  tls:
+    auto:
+      # Certificats générés dans le cluster (certgen) et non par helm à chaque rendu, sinon diff permanent sur c0
+      method: cronJob
   relay:
     enabled: true
   ui:
