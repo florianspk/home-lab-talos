@@ -28,8 +28,12 @@ resource "proxmox_virtual_environment_file" "talos" {
   datastore_id = var.default-iso-datastoreid
   content_type = "iso"
   source_file {
-    path      = "tmp/talos/talos-${var.talos_version}.qcow2"
-    file_name = "talos-${var.talos_version}.img"
+    path      = "tmp/talos/talos-${var.talos_image_version}.qcow2"
+    file_name = "talos-${var.talos_image_version}.img"
+  }
+  lifecycle {
+    # source_file est ForceNew : un renommage ou un changement local remplacerait l'image (et les VMs qui en dépendent)
+    ignore_changes = [source_file]
   }
 }
 
@@ -82,6 +86,10 @@ resource "proxmox_virtual_environment_vm" "controller" {
     enabled = true
     trim    = true
   }
+  lifecycle {
+    # Disque système installé depuis l'image initiale (file_id est ForceNew) ; les upgrades Talos se font via talosctl
+    ignore_changes = [disk[0].file_id]
+  }
   initialization {
     datastore_id = local.get_datastore_for_controller[count.index]
     ip_config {
@@ -110,7 +118,7 @@ resource "proxmox_virtual_environment_vm" "worker" {
     cores = 4
   }
   memory {
-    dedicated = 6 * 1024
+    dedicated = 10 * 1024
   }
   vga {
     type = "qxl"
@@ -162,6 +170,10 @@ resource "proxmox_virtual_environment_vm" "worker" {
   agent {
     enabled = true
     trim    = true
+  }
+  lifecycle {
+    # Disque système installé depuis l'image initiale (file_id est ForceNew) ; les upgrades Talos se font via talosctl
+    ignore_changes = [disk[0].file_id]
   }
   initialization {
     datastore_id = local.get_datastore_for_worker[count.index]

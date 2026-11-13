@@ -4,18 +4,46 @@ variable "proxmox_pve_node_name" {
 }
 
 variable "talos_version" {
-  type    = string
-  default = "1.8.3"
+  description = "Version réelle de l'OS Talos des nœuds (utilisée pour machine.install.image)"
+  type        = string
+  default     = "1.12.4"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.talos_version))
     error_message = "Must be a version number."
   }
 }
 
+variable "talos_config_contract_version" {
+  description = "Contrat de génération de la machine config et des secrets Talos. À garder figé sur la version de création du cluster, ne jamais descendre (replace des secrets = perte de la PKI)"
+  type        = string
+  default     = "1.10.4"
+  validation {
+    condition     = can(regex("^\\d+(\\.\\d+)+", var.talos_config_contract_version))
+    error_message = "Must be a version number."
+  }
+}
+
+variable "talos_image_version" {
+  description = "Version de l'image disque qcow2 ayant servi à créer les VMs (présente dans tmp/talos)"
+  type        = string
+  default     = "1.10.4"
+  validation {
+    condition     = can(regex("^\\d+(\\.\\d+)+", var.talos_image_version))
+    error_message = "Must be a version number."
+  }
+}
+
+variable "talos_schematic_id" {
+  description = "Schematic Image Factory : qemu-guest-agent, drbd, spin, net.ifnames=0"
+  type        = string
+  default     = "c9ad9bf8909db9a56334e698463c6f0a0c61adfae376c1a6dc133976f5b8c7e5"
+}
+
 variable "kubernetes_version" {
   type = string
+  # Passer par `talosctl upgrade-k8s` avant de monter cette valeur
   # renovate: datasource=github-releases depName=siderolabs/kubelet
-  default = "1.36.2"
+  default = "1.35.0"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.kubernetes_version))
     error_message = "Must be a version number."

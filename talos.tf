@@ -65,7 +65,11 @@ locals {
 }
 
 resource "talos_machine_secrets" "talos" {
-  talos_version = "v${var.talos_version}"
+  talos_version = "v${var.talos_config_contract_version}"
+  lifecycle {
+    # Filet de sécurité : un replace régénérerait toute la PKI du cluster
+    prevent_destroy = true
+  }
 }
 
 data "talos_machine_configuration" "controller" {
@@ -73,7 +77,7 @@ data "talos_machine_configuration" "controller" {
   cluster_endpoint   = var.cluster_endpoint
   machine_secrets    = talos_machine_secrets.talos.machine_secrets
   machine_type       = "controlplane"
-  talos_version      = "v${var.talos_version}"
+  talos_version      = "v${var.talos_config_contract_version}"
   kubernetes_version = var.kubernetes_version
   examples           = false
   docs               = false
@@ -84,7 +88,7 @@ data "talos_machine_configuration" "worker" {
   cluster_endpoint   = var.cluster_endpoint
   machine_secrets    = talos_machine_secrets.talos.machine_secrets
   machine_type       = "worker"
-  talos_version      = "v${var.talos_version}"
+  talos_version      = "v${var.talos_config_contract_version}"
   kubernetes_version = var.kubernetes_version
   examples           = false
   docs               = false
@@ -129,6 +133,9 @@ resource "talos_machine_configuration_apply" "controller" {
         }
         time = {
           servers = var.ntp_serveurs
+        }
+        install = {
+          image = "factory.talos.dev/nocloud-installer/${var.talos_schematic_id}:v${var.talos_version}"
         }
       }
     }),
@@ -226,6 +233,9 @@ resource "talos_machine_configuration_apply" "worker" {
         }
         time = {
           servers = var.ntp_serveurs
+        }
+        install = {
+          image = "factory.talos.dev/installer/${var.talos_schematic_id}:v${var.talos_version}"
         }
         sysctls = {
           "net.ipv6.conf.all.disable_ipv6"     = "1"
