@@ -68,7 +68,6 @@ jobs:
         run: |
           set -o pipefail
           if ! terraform plan -lock=false -var-file=conf/production.tfvars -out=plan.tfplan > plan.log 2>&1; then
-            grep -E '^(Error|│ Error)' plan.log | sed -E 's/"[^"]{40,}"/"<masqué>"/g' | head -20
             echo "::error::terraform plan a échoué (détail masqué, relancer en local)"
             exit 1
           fi
