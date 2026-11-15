@@ -43,7 +43,7 @@ variable "kubernetes_version" {
   description = "Version de Kubernetes. Faire d'abord `talosctl upgrade-k8s` (une mineure à la fois), puis aligner cette valeur"
   type        = string
   # renovate: datasource=github-releases depName=siderolabs/kubelet
-  default = "1.36.6"
+  default = "1.37.2"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.kubernetes_version))
     error_message = "Must be a version number."
