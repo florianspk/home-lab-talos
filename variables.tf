@@ -44,7 +44,7 @@ variable "kubernetes_version" {
   description = "Version de Kubernetes. La monter lance upgrade-k8s via talos_cluster au prochain apply. PR Renovate : une mineure à la fois ; merger puis apply (relire le dry-run upgrade-k8s avant)"
   type        = string
   # renovate: datasource=github-releases depName=siderolabs/kubelet
-  default = "1.36.6"
+  default = "1.37.2"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.kubernetes_version))
     error_message = "Must be a version number."
