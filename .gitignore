@@ -10,3 +10,4 @@ tfplan
 tmp
 .terraform.lock.hcl
 .env
+__pycache__/

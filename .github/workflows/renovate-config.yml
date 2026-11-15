@@ -1,0 +1,42 @@
+# Garde-fou : renovate.json doit être valide (--strict, sans option dépréciée) et
+# n'activer AUCUN automerge. Les charts partagés sont mergés par renovate-sync ;
+# talos_version, kubernetes_version, talos_config_contract_version,
+# talos_image_version et le provider siderolabs/talos restent strictement manuels.
+name: renovate-config
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - renovate.json
+      - .github/workflows/renovate-config.yml
+      - .github/scripts/renovate_sync.py
+  push:
+    branches: [main]
+    paths:
+      - renovate.json
+
+permissions:
+  contents: read
+
+jobs:
+  renovate-config:
+    name: renovate-config
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Aucun automerge dans renovate.json
+        run: python3 -I .github/scripts/renovate_sync.py check-renovate-config --file renovate.json
+
+      - name: renovate-config-validator --strict
+        env:
+          RENOVATE_VERSION: "44"
+        run: |
+          docker run --rm -v "$PWD:/usr/src/app:ro" -w /usr/src/app \
+            --entrypoint renovate-config-validator "renovate/renovate:${RENOVATE_VERSION}" \
+            --strict
