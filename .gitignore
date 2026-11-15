@@ -11,3 +11,4 @@ tmp
 .terraform.lock.hcl
 .env
 __pycache__/
+backend.hcl

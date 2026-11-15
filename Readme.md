@@ -161,10 +161,14 @@ Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur 
    ```
 
 2. **Provisioning Terraform**
+   State dans Garage (S3, via Tailscale), workspace `prod`. `backend.hcl` (gitignoré) contient bucket, region `garage`, key, endpoint et credentials.
+   Garage refuse les checksums CRC32 du SDK AWS sur les uploads multipart (state ~17 Mo) : exporter les deux variables ci-dessous.
    ```bash
-   terraform init
-   terraform plan
-   terraform apply
+   export AWS_REQUEST_CHECKSUM_CALCULATION=when_required AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
+   terraform init -backend-config=backend.hcl
+   terraform workspace select prod
+   terraform plan -var-file=conf/production.tfvars
+   terraform apply -var-file=conf/production.tfvars
    ```
 
 
@@ -187,8 +191,10 @@ Talos et Kubernetes se montent via Terraform : `talos_machine` gère l'OS (`talo
 1. **Talos OS** (une mineure à la fois) : vérifier le schematic (Image Factory) et la santé du cluster (NFS, CNPG, `linstor r l`), merger la PR, puis `terraform apply -parallelism=1` (c0 d'abord, puis les workers un par un : drain → reboot → Ready → uncordon).
    Le provider n'attend pas la fin des resync DRBD entre deux workers : pour plus de contrôle, `terraform plan -target='talos_machine.<nœud>' -out=n.tfplan` puis `terraform apply n.tfplan`, nœud par nœud.
    Si un réplica CNPG reste bloqué en recovery : `checkpoint` + `select pg_switch_wal()` sur le primaire. Si l'upgrade bloque au démontage, c'est le NFS (montage `hard`).
-2. **Kubernetes** (une mineure à la fois, après Talos) : relire d'abord le diff avec `talosctl -n <c0> upgrade-k8s --to <version> --with-docs=false --with-examples=false --dry-run` (Terraform n'a pas de dry-run), merger la PR, puis `terraform apply`.
-   `upgrade-k8s` réapplique les `inlineManifests` (cilium, cert-manager, argocd...) : garder les values `helm/*` alignées sur argocd-apps-homelab.
+2. **Kubernetes** (une mineure à la fois, Talos à jour avant) :
+   - Dry-run : `talosctl -n <c0> upgrade-k8s --to <version> --with-docs=false --with-examples=false --dry-run`, relire le diff des manifests.
+   - Merger la PR Renovate `siderolabs/kubelet` (ou monter `kubernetes_version`), puis `terraform apply`. `talos_cluster` lance `upgrade-k8s` : control plane, puis kubelets nœud par nœud (~6 min).
+   - Les values `helm/*` doivent rester alignées sur argocd-apps-homelab, sinon `upgrade-k8s` écrase le live.
 
 À ne pas faire :
 - changer la chaîne `image` sans changer de version (registry, `installer` ↔ `nocloud-installer`, digest) : ça déclenche un upgrade avec reboot ;
