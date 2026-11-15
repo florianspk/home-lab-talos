@@ -12,8 +12,9 @@ locals {
       }
       spec = {
         loadBalancerIPs = true
+        # Nom réel de l'interface sur les nœuds (ens18 n'est qu'un altname, non vu par Cilium). Identique au live.
         interfaces = [
-          "ens18",
+          "eth0",
         ]
         nodeSelector = {
           matchExpressions = [
@@ -62,4 +63,16 @@ data "helm_template" "cilium" {
   kube_version = var.kubernetes_version
   api_versions = []
   values       = [file("${path.module}/helm/cilium-values.yaml")]
+}
+
+locals {
+  # ArgoCD (Helm v4) supprime les clés à null (~) des values par défaut du chart, le provider helm 3.3.0 (Helm v3) les garde
+  # (et ignore les null imbriqués passés en values/set). Sans ça, le rendu diffère du live : --k8s-api-server-urls= vide
+  # dans le DaemonSet et 3 clés vides dans cilium-config, donc rollout de cilium à chaque upgrade-k8s.
+  # Seules les lignes à valeur VIDE sont retirées.
+  cilium_manifest = replace(
+    data.helm_template.cilium.manifest,
+    "/(?m)^ *(- \"--k8s-api-server-urls=\"|(debug-verbose|nodeport-addresses|policy-cidr-match-mode): \"\")\n/",
+    "",
+  )
 }

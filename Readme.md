@@ -178,6 +178,29 @@ Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur 
    - ArgoCD se déploie automatiquement
    - Fork le repo  [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab) et modifier bootstrap_repo_url
 
+### Upgrades (provider talos ≥ 0.12.0)
+
+Les nœuds sont gérés par `talos_machine` (config + version de Talos).
+
+**Avant chaque upgrade** : backup du state, snapshot etcd (`talosctl -n <c0> etcd snapshot`), `terraform plan` relu.
+
+1. **Talos OS** (une mineure à la fois, ex. 1.13.x → 1.14.x) :
+   - Vérifier que le schematic existe pour la version cible (Image Factory) et que le cluster est sain (NFS, CNPG, `linstor r l`), puis monter `talos_version`.
+   - Nœud par nœud, c0 puis `worker[0..3]` : `terraform plan -target='talos_machine.<nœud>' -out=n.tfplan`, vérifier que seule l'`image` change, puis `terraform apply n.tfplan`.
+   - Entre chaque nœud, attendre que tout soit sain (nodes Ready, DRBD sans resync, CNPG healthy) ; à la fin, `terraform plan` doit être vide.
+   - Si un réplica CNPG reste bloqué en recovery, lancer `checkpoint` + `select pg_switch_wal()` sur le primaire. Si l'upgrade bloque au démontage, c'est le NFS (montage `hard`).
+2. **Kubernetes** : une fois tous les nœuds upgradés, `talosctl -n <c0> upgrade-k8s --to <version>` (une mineure à la fois),
+   puis aligner `kubernetes_version` et vérifier que `terraform plan` est vide.
+   Utiliser un `talosctl` de la même version que Talos, toujours avec `--to`, plus `--with-docs=false --with-examples=false` ; lancer d'abord `--dry-run` et relire le diff des manifests.
+   Garder les values `helm/*` alignées sur argocd-apps-homelab (sinon `upgrade-k8s` écrase le live), et aligner `kubernetes_version` juste après l'upgrade.
+   `upgrade-k8s` resynchronise aussi les `inlineManifests` (cilium, cert-manager, argocd...) : vérifier les versions des charts avant.
+   (`talos_cluster` n'est pas utilisé : ses health checks ne fonctionnent pas avec le provider 0.12.0 sur Talos 1.12, voir `talos.tf`.)
+
+À ne pas faire :
+- changer la chaîne `image` sans changer de version (registry, `installer` ↔ `nocloud-installer`, digest) : ça déclenche un upgrade avec reboot ;
+- retirer `talos_schematic_id` ou passer c0 sur l'image `installer` (metal) : c0 doit rester en `nocloud-installer` ;
+- descendre `talos_config_contract_version`.
+
 ---
 
 ## <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4dd/512.gif" alt="📝" width="20" height="20"> Licence
