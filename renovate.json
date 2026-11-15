@@ -21,7 +21,7 @@
   ],
   "packageRules": [
     {
-      "description": "Kubernetes : une PR par version mineure, jamais d'automerge. Merger ne met rien à jour : l'upgrade se fait par `talosctl upgrade-k8s` manuel, puis on aligne kubernetes_version (talos_machine avec ignore_kubernetes_upgrade_drift=true)",
+      "description": "Kubernetes : une PR par version mineure, jamais d'automerge. Après merge, `terraform apply` lance upgrade-k8s via talos_cluster (relire le dry-run talosctl avant)",
       "matchDepNames": [
         "siderolabs/kubelet"
       ],
