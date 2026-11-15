@@ -26,7 +26,7 @@ for rc in plan.get("resource_changes", []):
     if actions in (["no-op"], ["read"]):
         continue
     addr = rc["address"]
-    fp.append(f"{addr} {','.join(actions)}")
+    fp.append(rc)
     if "delete" in actions:
         destroy = True
 
@@ -45,7 +45,14 @@ for rc in plan.get("resource_changes", []):
 
     rows.append((addr, "/".join(actions), ", ".join(f"`{a}`" for a in attrs[:8]) + (" …" if len(attrs) > 8 else "")))
 
-fingerprint = hashlib.sha256("\n".join(sorted(fp)).encode()).hexdigest()[:16]
+fingerprint = hashlib.sha256(json.dumps(
+    {
+        "resource_changes": sorted(fp, key=lambda rc: rc["address"]),
+        "output_changes": plan.get("output_changes", {}),
+    },
+    sort_keys=True,
+    separators=(",", ":"),
+).encode()).hexdigest()[:16]
 
 md = ["<!-- terraform-plan -->", "### Terraform plan (prod)", ""]
 if not rows:
