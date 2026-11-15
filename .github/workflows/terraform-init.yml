@@ -21,4 +21,5 @@ jobs:
           terraform_version: v1.17.2
 
       - name: Terraform Init
-        run: terraform init
+        # Backend S3 partiel (backend.hcl gitignoré) : init sans backend, juste providers/modules
+        run: terraform init -backend=false -input=false
