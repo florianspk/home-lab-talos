@@ -180,21 +180,15 @@ Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur 
 
 ### Upgrades (provider talos ≥ 0.12.0)
 
-Les nœuds sont gérés par `talos_machine` (config + version de Talos).
+Talos et Kubernetes se montent via Terraform : `talos_machine` gère l'OS (`talos_version`), `talos_cluster` lance `upgrade-k8s` (`kubernetes_version`). Renovate ouvre une PR par mineure (label `manual-upgrade`, jamais d'automerge).
 
 **Avant chaque upgrade** : backup du state, snapshot etcd (`talosctl -n <c0> etcd snapshot`), `terraform plan` relu.
 
-1. **Talos OS** (une mineure à la fois, ex. 1.13.x → 1.14.x) :
-   - Vérifier que le schematic existe pour la version cible (Image Factory) et que le cluster est sain (NFS, CNPG, `linstor r l`), puis monter `talos_version`.
-   - Nœud par nœud, c0 puis `worker[0..3]` : `terraform plan -target='talos_machine.<nœud>' -out=n.tfplan`, vérifier que seule l'`image` change, puis `terraform apply n.tfplan`.
-   - Entre chaque nœud, attendre que tout soit sain (nodes Ready, DRBD sans resync, CNPG healthy) ; à la fin, `terraform plan` doit être vide.
-   - Si un réplica CNPG reste bloqué en recovery, lancer `checkpoint` + `select pg_switch_wal()` sur le primaire. Si l'upgrade bloque au démontage, c'est le NFS (montage `hard`).
-2. **Kubernetes** : une fois tous les nœuds upgradés, `talosctl -n <c0> upgrade-k8s --to <version>` (une mineure à la fois),
-   puis aligner `kubernetes_version` et vérifier que `terraform plan` est vide.
-   Utiliser un `talosctl` de la même version que Talos, toujours avec `--to`, plus `--with-docs=false --with-examples=false` ; lancer d'abord `--dry-run` et relire le diff des manifests.
-   Garder les values `helm/*` alignées sur argocd-apps-homelab (sinon `upgrade-k8s` écrase le live), et aligner `kubernetes_version` juste après l'upgrade.
-   `upgrade-k8s` resynchronise aussi les `inlineManifests` (cilium, cert-manager, argocd...) : vérifier les versions des charts avant.
-   (`talos_cluster` n'est pas utilisé : ses health checks ne fonctionnent pas avec le provider 0.12.0 sur Talos 1.12, voir `talos.tf`.)
+1. **Talos OS** (une mineure à la fois) : vérifier le schematic (Image Factory) et la santé du cluster (NFS, CNPG, `linstor r l`), merger la PR, puis `terraform apply -parallelism=1` (c0 d'abord, puis les workers un par un : drain → reboot → Ready → uncordon).
+   Le provider n'attend pas la fin des resync DRBD entre deux workers : pour plus de contrôle, `terraform plan -target='talos_machine.<nœud>' -out=n.tfplan` puis `terraform apply n.tfplan`, nœud par nœud.
+   Si un réplica CNPG reste bloqué en recovery : `checkpoint` + `select pg_switch_wal()` sur le primaire. Si l'upgrade bloque au démontage, c'est le NFS (montage `hard`).
+2. **Kubernetes** (une mineure à la fois, après Talos) : relire d'abord le diff avec `talosctl -n <c0> upgrade-k8s --to <version> --with-docs=false --with-examples=false --dry-run` (Terraform n'a pas de dry-run), merger la PR, puis `terraform apply`.
+   `upgrade-k8s` réapplique les `inlineManifests` (cilium, cert-manager, argocd...) : garder les values `helm/*` alignées sur argocd-apps-homelab.
 
 À ne pas faire :
 - changer la chaîne `image` sans changer de version (registry, `installer` ↔ `nocloud-installer`, digest) : ça déclenche un upgrade avec reboot ;

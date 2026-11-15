@@ -289,12 +289,27 @@ resource "talos_machine" "worker" {
   ]
 }
 
-# talos_cluster (bootstrap + upgrade-k8s piloté par kubernetes_version) n'est PAS utilisé pour l'instant :
-# avec le provider 0.12.0 (lib Talos 1.14), ses health checks restent bloqués sur « etcd to be healthy »
-# contre des nœuds Talos 1.12 (DeadlineExceeded, alors que `talosctl health` passe).
-# À retester une fois les nœuds en 1.13+/1.14 :
-#   data "talos_cluster_health" lancé à part, sur c0 avec skip_kubernetes_checks = true.
-# En attendant, upgrades Kubernetes : `talosctl -n <c0> upgrade-k8s --to <version>`, puis aligner kubernetes_version.
+# Upgrade Kubernetes piloté par Terraform : quand kubernetes_version change, talos_cluster lance la
+# procédure upgrade-k8s de Talos (pré-pull des images, apiserver -> controller-manager -> scheduler,
+# kube-proxy, puis kubelet nœud par nœud avec health checks, puis ré-application des inlineManifests).
+# Les talos_machine ont ignore_kubernetes_upgrade_drift = true : ils ne touchent jamais aux tags d'images k8s.
+# Création sur un cluster existant : le Bootstrap RPC renvoie AlreadyExists (etcd déjà initialisé),
+# traité comme un succès par le provider ; aucun upgrade n'est lancé à la création, seulement sur update.
+# depends_on : si talos_version et kubernetes_version changent dans le même apply, l'OS passe d'abord.
+resource "talos_cluster" "talos" {
+  client_configuration = talos_machine_secrets.talos.client_configuration
+  node                 = local.controller_nodes[0].address
+  control_plane_nodes  = [for node in local.controller_nodes : node.address]
+  kubernetes_version   = "v${var.kubernetes_version}"
+  timeouts = {
+    create = "20m"
+    update = "60m"
+  }
+  depends_on = [
+    talos_machine.controller,
+    talos_machine.worker,
+  ]
+}
 
 # Migration provider 0.12.0 : les anciennes ressources sortent du state sans être détruites
 # (pas de moved/import possible en 0.12.0 vers talos_machine / talos_cluster)
