@@ -1,0 +1,66 @@
+name: terraform-setup
+description: >-
+  Rejoint le tailnet (OIDC, tag:ci), écrit backend.hcl / production.tfvars / clé SSH Proxmox
+  depuis les secrets (jamais affichés), puis terraform init sur le state Garage.
+
+inputs:
+  ts-oauth-client-id:
+    required: true
+  ts-audience:
+    required: true
+  backend-hcl:
+    required: true
+  tfvars:
+    required: true
+  proxmox-ssh-key:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+      with:
+        # Même version qu'en local (le state est partagé entre poste et CI)
+        terraform_version: 1.15.4
+        terraform_wrapper: false
+
+    - name: Tailscale
+      uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ inputs.ts-oauth-client-id }}
+        audience: ${{ inputs.ts-audience }}
+        tags: tag:ci
+        # Nœuds Talos (172.31.1.0/24) annoncés par le subnet router pfsense
+        args: --accept-routes
+
+    - name: Attendre l'accès au homelab
+      shell: bash
+      run: |
+        for i in $(seq 1 30); do
+          if timeout 3 bash -c '</dev/tcp/172.31.1.55/50000' 2>/dev/null; then echo "Talos API joignable"; exit 0; fi
+          sleep 2
+        done
+        echo "::error::172.31.1.55:50000 injoignable via Tailscale (route 172.31.1.0/24 / ACL tag:ci ?)"
+        exit 1
+
+    - name: Fichiers secrets
+      shell: bash
+      env:
+        BACKEND_HCL: ${{ inputs.backend-hcl }}
+        TFVARS: ${{ inputs.tfvars }}
+        SSH_KEY: ${{ inputs.proxmox-ssh-key }}
+      run: |
+        umask 077
+        printf '%s\n' "$BACKEND_HCL" > backend.hcl
+        mkdir -p conf && printf '%s\n' "$TFVARS" > conf/production.tfvars
+        mkdir -p ~/.ssh && printf '%s\n' "$SSH_KEY" > ~/.ssh/terraform_id_ed25519
+        # Provider proxmox : ssh { agent = true }
+        eval "$(ssh-agent -s)" >/dev/null
+        ssh-add -q ~/.ssh/terraform_id_ed25519
+        echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+        echo "TF_VAR_path_private_key=$HOME/.ssh/terraform_id_ed25519" >> "$GITHUB_ENV"
+
+    - name: Terraform init
+      shell: bash
+      run: terraform init -input=false -backend-config=backend.hcl > /dev/null && echo "init OK (workspace $TF_WORKSPACE)"

@@ -1,0 +1,178 @@
+# Plan sur chaque PR (résumé en commentaire, sans valeurs : repo public),
+# apply au merge sur main après validation manuelle (environnement GitHub "production").
+#
+# Accès homelab : runner GitHub + Tailscale (OIDC, tag:ci, route 172.31.1.0/24 via pfsense).
+# Secrets (repo) : TS_OAUTH_CLIENT_ID, TS_AUDIENCE, TF_BACKEND_HCL, TF_PROD_TFVARS, PROXMOX_SSH_KEY.
+name: terraform
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.tf'
+      - '.terraform.lock.hcl'
+      - 'helm/**'
+      - '.github/workflows/terraform.yml'
+      - '.github/actions/terraform-setup/**'
+      - '.github/scripts/tf_plan_summary.py'
+  push:
+    branches: [main]
+    paths:
+      - '**.tf'
+      - '.terraform.lock.hcl'
+      - 'helm/**'
+      - '.github/workflows/terraform.yml'
+      - '.github/actions/terraform-setup/**'
+      - '.github/scripts/tf_plan_summary.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_WORKSPACE: prod
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+  # Garage refuse les checksums CRC32 du SDK AWS en multipart (state ~17 Mo)
+  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+jobs:
+  plan:
+    name: terraform-plan
+    # Pas de secrets pour les PR de forks : on ne planifie que les branches du repo (toi, Renovate)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write       # OIDC Tailscale
+      pull-requests: write  # commentaire du plan
+    outputs:
+      fingerprint: ${{ steps.summary.outputs.fingerprint }}
+      changes: ${{ steps.summary.outputs.changes }}
+      destroy: ${{ steps.summary.outputs.destroy }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/terraform-setup
+        with:
+          ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          ts-audience: ${{ secrets.TS_AUDIENCE }}
+          backend-hcl: ${{ secrets.TF_BACKEND_HCL }}
+          tfvars: ${{ secrets.TF_PROD_TFVARS }}
+          proxmox-ssh-key: ${{ secrets.PROXMOX_SSH_KEY }}
+
+      - name: Terraform plan
+        # Sortie complète jamais affichée ; -lock=false : un plan n'écrit pas le state
+        run: |
+          set -o pipefail
+          if ! terraform plan -lock=false -var-file=conf/production.tfvars -out=plan.tfplan > plan.log 2>&1; then
+            grep -E '^(Error|│ Error)' plan.log | sed -E 's/"[^"]{40,}"/"<masqué>"/g' | head -20
+            echo "::error::terraform plan a échoué (détail masqué, relancer en local)"
+            exit 1
+          fi
+          echo "plan OK"
+
+      - name: Résumé
+        id: summary
+        run: terraform show -json plan.tfplan | python3 .github/scripts/tf_plan_summary.py summary.md
+
+      - name: Dry-run upgrade-k8s
+        if: steps.summary.outputs.k8s_to != ''
+        env:
+          K8S_TO: ${{ steps.summary.outputs.k8s_to }}
+        run: |
+          set -o pipefail
+          TALOS=$(echo 'var.talos_version' | terraform console -var-file=conf/production.tfvars | tr -d '"')
+          curl -fsSL -o talosctl "https://github.com/siderolabs/talos/releases/download/v${TALOS}/talosctl-linux-amd64"
+          chmod +x talosctl
+          (umask 077; terraform output -raw talosconfig > talosconfig)
+          C0=172.31.1.55
+          ./talosctl --talosconfig talosconfig -n $C0 -e $C0 upgrade-k8s --to "$K8S_TO" \
+            --with-docs=false --with-examples=false --dry-run > k8s-dry.log 2>&1
+          # Uniquement les lignes d'étapes et les objets touchés (pas le contenu des manifests)
+          {
+            echo; echo "#### Dry-run \`upgrade-k8s --to $K8S_TO\`"; echo '```'
+            grep -E 'compatible|detected|updating|> |^\+\+\+ b/' k8s-dry.log | grep -viE 'secret|token|key' | head -60
+            echo '```'
+          } >> summary.md
+
+      - name: Publier le résumé
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          [ -n "$PR" ] || exit 0
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+                 -q '.[] | select(.body | startswith("<!-- terraform-plan -->")) | .id' | tail -1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@summary.md > /dev/null
+          else
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" -F body=@summary.md > /dev/null
+          fi
+
+      - name: Nettoyage
+        if: always()
+        run: rm -f backend.hcl conf/production.tfvars talosconfig plan.tfplan plan.log k8s-dry.log ~/.ssh/terraform_id_ed25519
+
+  apply:
+    name: terraform-apply
+    needs: plan
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.plan.outputs.changes != '0'
+    runs-on: ubuntu-latest
+    # Validation manuelle : reviewer obligatoire sur l'environnement production
+    environment: production
+    concurrency:
+      group: terraform-apply-prod
+      cancel-in-progress: false
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Refus si destruction
+        if: needs.plan.outputs.destroy == 'true'
+        run: |
+          echo "::error::Le plan détruit ou remplace des ressources : apply à faire en local."
+          exit 1
+
+      - uses: ./.github/actions/terraform-setup
+        with:
+          ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          ts-audience: ${{ secrets.TS_AUDIENCE }}
+          backend-hcl: ${{ secrets.TF_BACKEND_HCL }}
+          tfvars: ${{ secrets.TF_PROD_TFVARS }}
+          proxmox-ssh-key: ${{ secrets.PROXMOX_SSH_KEY }}
+
+      - name: Terraform plan (verrouillé)
+        run: |
+          terraform plan -lock-timeout=15m -var-file=conf/production.tfvars -out=plan.tfplan > plan.log 2>&1 \
+            || { echo "::error::terraform plan a échoué (détail masqué)"; exit 1; }
+
+      - name: Vérifier que le plan est celui validé
+        id: check
+        env:
+          EXPECTED: ${{ needs.plan.outputs.fingerprint }}
+        run: |
+          terraform show -json plan.tfplan | python3 .github/scripts/tf_plan_summary.py summary.md
+          got=$(grep '^fingerprint=' "$GITHUB_OUTPUT" | tail -1 | cut -d= -f2)
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          if [ "$got" != "$EXPECTED" ]; then
+            echo "::error::Le plan a changé depuis la validation ($EXPECTED -> $got) : relancer le workflow."
+            exit 1
+          fi
+
+      - name: Terraform apply
+        # -parallelism=1 : upgrades Talos nœud par nœud (c0 puis les workers)
+        run: |
+          set -o pipefail
+          terraform apply -parallelism=1 -lock-timeout=15m plan.tfplan 2>&1 \
+            | grep -E --line-buffered 'Creating|Modifying|Destroying|complete|Still|Error|Warning|^│'
+
+      - name: Nettoyage
+        if: always()
+        run: rm -f backend.hcl conf/production.tfvars plan.tfplan plan.log ~/.ssh/terraform_id_ed25519
