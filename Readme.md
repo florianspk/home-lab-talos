@@ -161,7 +161,7 @@ Bien que la majorité de l'infrastructure soit auto-hébergée, je m'appuie sur 
    ```
 
 2. **Provisioning Terraform**
-   State dans Garage (S3, via Tailscale), workspace `prod`. `backend.hcl` (gitignoré) contient bucket, region `garage`, key, endpoint et credentials.
+   State dans Garage (S3, via Tailscale), workspace `prod`. `backend.hcl` (gitignoré) contient bucket, region `garage`, `key = "terraform.tfstate"`, `workspace_key_prefix = "home-lab-talos"` (objet `home-lab-talos/prod/terraform.tfstate`), endpoint et credentials.
    Garage refuse les checksums CRC32 du SDK AWS sur les uploads multipart (state ~17 Mo) : exporter les deux variables ci-dessous.
    ```bash
    export AWS_REQUEST_CHECKSUM_CALCULATION=when_required AWS_RESPONSE_CHECKSUM_VALIDATION=when_required
