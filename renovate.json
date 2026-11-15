@@ -1,19 +1,82 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "regexManagers": [
+  "automerge": false,
+  "customManagers": [
     {
-      "fileMatch": [
-        ".yml$",
-        ".hcl$",
-        ".tf$",
-        ".sh$",
-        ".md$"
+      "customType": "regex",
+      "description": "Commentaires '# renovate: datasource=... depName=... [versioning=...] [extractVersion=...] [registryUrl=...]' suivis de la ligne portant la version",
+      "managerFilePatterns": [
+        "/\\.yml$/",
+        "/\\.hcl$/",
+        "/\\.tf$/",
+        "/\\.sh$/",
+        "/\\.md$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[^:]+?) depName=(?<depName>.+?)( versioning=(?<versioning>.+?))?( extractVersion=(?<extractVersion>.+?))?( registryUrl=(?<registryUrl>.+?))?\\s.+?[:=]\\s*[\"']?(?<currentValue>.+?)[\"']?\\s"
       ],
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}",
       "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^v?(?<version>.+)${{/if}}"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Kubernetes : une PR par version mineure, jamais d'automerge. Merger ne met rien à jour : l'upgrade se fait par `talosctl upgrade-k8s` manuel, puis on aligne kubernetes_version (talos_machine avec ignore_kubernetes_upgrade_drift=true)",
+      "matchDepNames": [
+        "siderolabs/kubelet"
+      ],
+      "separateMinorPatch": true,
+      "separateMultipleMinor": true,
+      "automerge": false,
+      "addLabels": [
+        "manual-upgrade"
+      ]
+    },
+    {
+      "description": "Talos (OS, image, extensions système) et provider Terraform siderolabs/talos : une PR par mineure, jamais d'automerge (talos_version, talos_config_contract_version et talos_image_version sont gérés à la main)",
+      "matchPackageNames": [
+        "siderolabs/talos",
+        "ghcr.io/siderolabs/**"
+      ],
+      "separateMinorPatch": true,
+      "separateMultipleMinor": true,
+      "automerge": false,
+      "addLabels": [
+        "manual-upgrade"
+      ]
+    },
+    {
+      "description": "Provider Terraform siderolabs/talos (depName 'talos') : ceinture et bretelles, jamais d'automerge",
+      "matchManagers": [
+        "terraform"
+      ],
+      "matchDepNames": [
+        "talos"
+      ],
+      "automerge": false,
+      "addLabels": [
+        "manual-upgrade"
+      ]
+    },
+    {
+      "description": "Charts partagés avec argocd-apps-homelab : pas d'automerge Renovate, c'est le workflow renovate-sync qui auto-merge quand la même version est sur main dans argocd-apps-homelab",
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchDepNames": [
+        "cilium",
+        "cert-manager",
+        "trust-manager",
+        "argo-cd",
+        "reloader"
+      ],
+      "automerge": false,
+      "addLabels": [
+        "argocd-shared-chart"
+      ],
+      "prBodyNotes": [
+        "Chart partagé avec [argocd-apps-homelab](https://github.com/florianspk/argocd-apps-homelab) : cette PR est auto-mergée par le workflow `renovate-sync` dès que la même version est sur `main` dans argocd-apps-homelab (check `sync-guard`). Le merge ne déclenche aucun `terraform apply`."
+      ]
     }
   ]
 }

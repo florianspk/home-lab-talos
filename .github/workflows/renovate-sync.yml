@@ -1,0 +1,98 @@
+# Synchronise les charts Helm partagés (cilium, cert-manager, trust-manager, argo-cd,
+# reloader) avec la version présente sur main dans florianspk/argocd-apps-homelab.
+#
+# - sync-guard : check requis sur main. Échoue si une PR modifie un chart partagé vers
+#   une version différente de celle d'argocd-apps-homelab, ou si l'auto-merge est
+#   activé sur une PR touchant Talos / Kubernetes / provider talos.
+# - reconcile  : auto-merge des PR Renovate éligibles, création des PR manquantes
+#   (branches renovate-sync/*), relance de sync-guard quand argocd a rattrapé.
+#
+# Ce workflow ne lance ni terraform, ni talosctl, ni kubectl : il n'utilise que l'API
+# GitHub. Le merge d'une PR ne déclenche aucun apply (Terraform reste manuel).
+name: renovate-sync
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review, auto_merge_enabled]
+  repository_dispatch:
+    types: [argocd-apps-homelab-updated]
+  schedule:
+    # Rattrapage (dispatch perdu, PR Renovate ouverte plus tard, checks en échec...).
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "N'effectue aucune écriture (log seulement)"
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  sync-guard:
+    name: sync-guard
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    concurrency:
+      group: renovate-sync-guard-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Vérifier la parité avec argocd-apps-homelab
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python3 -I .github/scripts/renovate_sync.py guard --pr "$PR_NUMBER"
+
+  reconcile:
+    name: reconcile
+    needs: [sync-guard]
+    # Sur pull_request : seulement si sync-guard est vert, pour une branche du dépôt
+    # (jamais un fork), et pas sur auto_merge_enabled (qu'il provoque lui-même).
+    if: >-
+      !cancelled() && (
+        github.event_name != 'pull_request' || (
+          needs.sync-guard.result == 'success' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          contains(fromJSON('["opened","synchronize","reopened","edited","labeled","unlabeled","ready_for_review"]'), github.event.action)
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write # relance de sync-guard (rerun-failed-jobs) avec GITHUB_TOKEN
+    concurrency:
+      group: renovate-sync-reconcile
+      cancel-in-progress: false
+    steps:
+      - name: Checkout main (script de confiance)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Réconcilier
+        env:
+          # PAT fine-grained limité à home-lab-talos (Contents + Pull requests en écriture).
+          # Nécessaire pour que les PR/merges créés déclenchent les workflows (CI, sync-guard).
+          GH_TOKEN: ${{ secrets.RENOVATE_SYNC_TOKEN }}
+          GH_ACTIONS_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+        run: |
+          if [ ! -f .github/scripts/renovate_sync.py ]; then
+            echo "::notice::renovate_sync.py absent de main (PR de mise en place non mergée)"
+            exit 0
+          fi
+          python3 -I .github/scripts/renovate_sync.py reconcile
