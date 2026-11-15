@@ -170,8 +170,11 @@ jobs:
         # -parallelism=1 : upgrades Talos nœud par nœud (c0 puis les workers)
         run: |
           set -o pipefail
-          terraform apply -parallelism=1 -lock-timeout=15m plan.tfplan 2>&1 \
-            | grep -E --line-buffered 'Creating|Modifying|Destroying|complete|Still|Error|Warning|^│'
+          if ! terraform apply -parallelism=1 -lock-timeout=15m plan.tfplan > /dev/null 2>&1; then
+            echo "::error::terraform apply a échoué (détail masqué, vérifier en local)"
+            exit 1
+          fi
+          echo "apply OK"
 
       - name: Nettoyage
         if: always()
