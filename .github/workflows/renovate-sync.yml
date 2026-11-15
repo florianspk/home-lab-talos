@@ -58,13 +58,13 @@ jobs:
     name: reconcile
     needs: [sync-guard]
     # Sur pull_request : seulement si sync-guard est vert, pour une branche du dépôt
-    # (jamais un fork) et pas pour les événements qu'il provoque lui-même.
+    # (jamais un fork), et pas sur auto_merge_enabled (qu'il provoque lui-même).
     if: >-
       !cancelled() && (
         github.event_name != 'pull_request' || (
           needs.sync-guard.result == 'success' &&
           github.event.pull_request.head.repo.full_name == github.repository &&
-          contains(fromJSON('["opened","synchronize","reopened","labeled","unlabeled","ready_for_review"]'), github.event.action)
+          contains(fromJSON('["opened","synchronize","reopened","edited","labeled","unlabeled","ready_for_review"]'), github.event.action)
         )
       )
     runs-on: ubuntu-latest
