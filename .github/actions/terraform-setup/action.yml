@@ -31,8 +31,7 @@ runs:
         oauth-client-id: ${{ inputs.ts-oauth-client-id }}
         audience: ${{ inputs.ts-audience }}
         tags: tag:ci
-        # Nœuds Talos (172.31.1.0/24) annoncés par le subnet router pfsense
-        args: --accept-routes
+        # --accept-routes est ajouté d'office par l'action v4 (route 172.31.1.0/24 du subnet router pfsense)
 
     - name: Attendre l'accès au homelab
       shell: bash
