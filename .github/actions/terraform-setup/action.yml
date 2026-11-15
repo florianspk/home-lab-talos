@@ -22,7 +22,7 @@ runs:
       uses: hashicorp/setup-terraform@v4
       with:
         # Même version qu'en local (le state est partagé entre poste et CI)
-        terraform_version: 1.15.4
+        terraform_version: v1.17.2
         terraform_wrapper: false
 
     - name: Tailscale
