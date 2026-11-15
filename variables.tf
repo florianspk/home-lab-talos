@@ -4,9 +4,9 @@ variable "proxmox_pve_node_name" {
 }
 
 variable "talos_version" {
-  description = "Version réelle de l'OS Talos des nœuds (utilisée pour machine.install.image)"
+  description = "Version de Talos des nœuds : la monter déclenche un upgrade OS (reboot) via talos_machine. Une mineure à la fois, apply avec -parallelism=1"
   type        = string
-  default     = "1.12.4"
+  default     = "1.14.6"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.talos_version))
     error_message = "Must be a version number."
@@ -40,10 +40,10 @@ variable "talos_schematic_id" {
 }
 
 variable "kubernetes_version" {
-  type = string
-  # Passer par `talosctl upgrade-k8s` avant de monter cette valeur
+  description = "Version de Kubernetes. Faire d'abord `talosctl upgrade-k8s` (une mineure à la fois), puis aligner cette valeur"
+  type        = string
   # renovate: datasource=github-releases depName=siderolabs/kubelet
-  default = "1.35.0"
+  default = "1.36.6"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.kubernetes_version))
     error_message = "Must be a version number."

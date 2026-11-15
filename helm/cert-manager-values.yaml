@@ -4,3 +4,6 @@ config:
   enableGatewayAPI: true
   kind: ControllerConfiguration
   apiVersion: "controller.config.cert-manager.io/v1alpha1"
+
+startupapicheck:
+  enabled: false
