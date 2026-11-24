@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 # renovate: datasource=github-releases depName=siderolabs/talos
-talos_version="1.14.6"
+talos_version="1.14.7"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/qemu-guest-agent
 talos_qemu_guest_agent_extension_tag="11.1.3"
 # renovate: datasource=docker depName=ghcr.io/siderolabs/drbd

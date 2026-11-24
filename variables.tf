@@ -7,7 +7,7 @@ variable "talos_version" {
   description = "Version de Talos des nœuds : la monter déclenche un upgrade OS (reboot) via talos_machine. PR Renovate : une mineure à la fois ; merger puis apply nœud par nœud (plan ciblé, c0 d'abord)"
   type        = string
   # renovate: datasource=github-releases depName=siderolabs/talos
-  default = "1.14.6"
+  default = "1.14.7"
   validation {
     condition     = can(regex("^\\d+(\\.\\d+)+", var.talos_version))
     error_message = "Must be a version number."
